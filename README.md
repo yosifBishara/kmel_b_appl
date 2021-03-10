@@ -1,6 +1,7 @@
 # kmel_b_app
 
-A new Flutter application.
+Client side appointment management application, developed and sold for a local barber shop,
+include local notifications, noSQL database (FireBase), developed using the cross platform framework Flutter.
 
 ## Getting Started
 

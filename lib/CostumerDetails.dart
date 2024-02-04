@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kmel_bishara_app/myFirestore.dart';
 import 'dart:async';
 import 'Appointment.dart';
 import 'Notifications.dart';
-import 'myFirestore.dart';
 import 'package:flutter/services.dart';
 
 
@@ -22,7 +20,7 @@ class _CostumerDetState extends State<CostumerDet> {
   LocalNotification _lNf = LocalNotification.ass();
   final _formKey = GlobalKey<FormState>();
   final controlName = TextEditingController(),controlNum = TextEditingController();
-  String dropDownValue1,dropDownValue2,dropDownValue3,nameField,phoneField;
+  late String? dropDownValue1,dropDownValue2,dropDownValue3,nameField,phoneField;
   DateTime today = DateTime.now();
   List<String> weekDays = ['ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת',
     'ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת'];
@@ -79,23 +77,23 @@ class _CostumerDetState extends State<CostumerDet> {
   Future<void> make1TimeDropDown(BuildContext context) async {
     if (dropDownValue1 != null) {
       availableHours.clear();
-      if (dropDownValue1.isNotEmpty) {
+      if (dropDownValue1!.isNotEmpty) {
         print('zbray');
         Navigator.pushNamed(context, '/load');
         for (int i = 0; i < hours.length ; i++) {
-          if(dropDownValue1.split("-")[0]=='שישי' && i<1) { continue; }
-          if(dropDownValue1.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
+          if(dropDownValue1!.split("-")[0]=='שישי' && i<1) { continue; }
+          if(dropDownValue1!.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
 
           DateTime tmpHour = DateTime(today.year,today.month,today.day,int.parse(hours[i].split(':')[0]),int.parse(hours[i].split(':')[1]));
-          List<String> timeList = List<String>();
+          List<String> timeList = <String>[];
           timeList.add(hours[i]);
           Appointment tempApp = Appointment(
-              '', '', dropDownValue1.split("-")[1],'', 1, timeList);
+              '', '', dropDownValue1!.split("-")[1],'', 1, timeList);
 
           // ignore: unrelated_type_equality_checks
           bool taken = await db.takenDateTime(tempApp.date, hours[i]);
           if (taken != true) {
-            if (dropDownValue1.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
+            if (dropDownValue1!.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
               if(tmpHour.isAfter(today)){
                 availableHours.add(hours[i]);
               }
@@ -117,29 +115,29 @@ class _CostumerDetState extends State<CostumerDet> {
   Future<void> make2TimeDropDown(BuildContext context) async {
     if (dropDownValue1 != null) {
       availableHours.clear();
-      if (dropDownValue1.isNotEmpty) {
+      if (dropDownValue1!.isNotEmpty) {
         print('zbray');
         Navigator.pushNamed(context, '/load');
         for (int i = 0; i < hours.length - 1; i++) {
-          if(dropDownValue1.split("-")[0]=='שישי' && i<1) { continue; }
-          if(dropDownValue1.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
+          if(dropDownValue1!.split("-")[0]=='שישי' && i<1) { continue; }
+          if(dropDownValue1!.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
 
           DateTime tmpHour1 = DateTime(
               today.year,today.month,today.day,int.parse(hours[i].split(':')[0]),int.parse(hours[i].split(':')[1]));
           DateTime tmpHour2 = DateTime(
               today.year,today.month,today.day,int.parse(hours[i+1].split(':')[0]),int.parse(hours[i+1].split(':')[1]));
-          List<String> timeList = List<String>();
+          List<String> timeList = <String>[];
           timeList.add(hours[i]);
           timeList.add(hours[i+1]);
           Appointment tempApp = Appointment(
-              '', '', dropDownValue1.split("-")[1],'', 2, timeList);
+              '', '', dropDownValue1!.split("-")[1],'', 2, timeList);
 
           // ignore: unrelated_type_equality_checks
           bool taken1 = await db.takenDateTime(tempApp.date, hours[i]);
           bool taken2 = await db.takenDateTime(tempApp.date, hours[i+1]);
 
           if (taken1 != true && taken2 != true) {
-            if (dropDownValue1.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
+            if (dropDownValue1!.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
               if(tmpHour1.isAfter(today)){
                 availableHours.add(hours[i]);
               }
@@ -161,22 +159,22 @@ class _CostumerDetState extends State<CostumerDet> {
   Future<void> make3TimeDropDown(BuildContext context) async {
     if (dropDownValue1 != null) {
       availableHours.clear();
-      if (dropDownValue1.isNotEmpty) {
+      if (dropDownValue1!.isNotEmpty) {
         print('zbray');
         Navigator.pushNamed(context, '/load');
         for (int i = 0; i < hours.length - 2 ; i++) {
-          if(dropDownValue1.split("-")[0]=='שישי' && i<1) { continue; }
-          if(dropDownValue1.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
+          if(dropDownValue1!.split("-")[0]=='שישי' && i<1) { continue; }
+          if(dropDownValue1!.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
           DateTime tmpHour1 = DateTime(
               today.year,today.month,today.day,int.parse(hours[i].split(':')[0]),int.parse(hours[i].split(':')[1]));
           DateTime tmpHour2 = DateTime(
               today.year,today.month,today.day,int.parse(hours[i+1].split(':')[0]),int.parse(hours[i+1].split(':')[1]));
-          List<String> timeList = List<String>();
+          List<String> timeList = <String>[];
           timeList.add(hours[i]);
           timeList.add(hours[i+1]);
           timeList.add(hours[i+2]);
           Appointment tempApp = Appointment(
-              '', '', dropDownValue1.split("-")[1],'', 2, timeList);
+              '', '', dropDownValue1!.split("-")[1],'', 2, timeList);
 
           // ignore: unrelated_type_equality_checks
           bool taken1 = await db.takenDateTime(tempApp.date, hours[i]);
@@ -184,7 +182,7 @@ class _CostumerDetState extends State<CostumerDet> {
           bool taken3 = await db.takenDateTime(tempApp.date, hours[i+2]);
 
           if (taken1 != true && taken2 != true && taken3 != true) {
-            if (dropDownValue1.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
+            if (dropDownValue1!.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
               if(tmpHour1.isAfter(today)){
                 availableHours.add(hours[i]);
               }
@@ -241,7 +239,7 @@ class _CostumerDetState extends State<CostumerDet> {
 
   showUpdateAlertDialog(BuildContext context, String prevDate, String prevHour, Appointment newApp){
     //2 buttons
-    Widget yesButton = FlatButton(
+    Widget yesButton = TextButton(
       child: Text('כן'),
       onPressed: () {
         db.updateApp(newApp);
@@ -250,7 +248,7 @@ class _CostumerDetState extends State<CostumerDet> {
       },
     );
 
-    Widget noButton = FlatButton(
+    Widget noButton = TextButton(
       child: Text('לא'),
       onPressed: () {
         Navigator.pushNamed(context, '/home');
@@ -295,7 +293,7 @@ class _CostumerDetState extends State<CostumerDet> {
 
     return SafeArea(
       child: Scaffold(
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.grey[800],
         appBar: AppBar(
           backgroundColor: Colors.black,
@@ -318,12 +316,13 @@ class _CostumerDetState extends State<CostumerDet> {
                   TextFormField(
                     enableSuggestions: true,
                     // ignore: missing_return
-                    validator: (String input) {
+                    validator: (String? input) {
+                      if(input == null) return 'הזן שם';
                       if(input.isEmpty) return 'הזן שם';
                     },
                     controller: controlName,
                     key: Key('username'),
-                    maxLengthEnforced: true,
+                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
                     maxLength: 25,
                     textAlign: TextAlign.end,
                     decoration: InputDecoration(
@@ -356,7 +355,7 @@ class _CostumerDetState extends State<CostumerDet> {
                       if (!(controlNum.text[0]=='0' && controlNum.text[1]=='5' && controlNum.text.length==10))
                         return 'מספר טלפון לא תקין';
                     },
-                    maxLengthEnforced: true,
+                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
                     maxLength: 10,
                     keyboardType: TextInputType.number,
                     controller: controlNum,
@@ -386,7 +385,7 @@ class _CostumerDetState extends State<CostumerDet> {
                         'כמות אנשים',
                       ),
                       // ignore: missing_return
-                      validator: (String input) {
+                      validator: (String? input) {
                         if(input == null || input.isEmpty) return 'בחר כמות';
                       },
                       value: dropDownValue3,
@@ -410,12 +409,12 @@ class _CostumerDetState extends State<CostumerDet> {
                             ),
                           )
                       ),
-                      onChanged: (String newValue) async {
+                      onChanged: (String? newValue) async {
                         setState(() {
-                          dropDownValue3 = newValue;
+                          dropDownValue3 = newValue!;
                         });
-                        if(dropDownValue1!=null && dropDownValue1.isNotEmpty) {
-                          if (dropDownValue2 != null &&dropDownValue2.isNotEmpty) {
+                        if(dropDownValue1!=null && dropDownValue1!.isNotEmpty) {
+                          if (dropDownValue2 != null &&dropDownValue2!.isNotEmpty) {
                             setState(() {
                               dropDownValue2 = null;
                             });
@@ -450,7 +449,7 @@ class _CostumerDetState extends State<CostumerDet> {
                           'תאריכים פנויים'
                       ),
                       // ignore: missing_return
-                      validator: (String input) {
+                      validator: (String? input) {
                         if(input==null || input.isEmpty) return 'הזן תאריך תור';
                       },
                       value: dropDownValue1,
@@ -475,8 +474,8 @@ class _CostumerDetState extends State<CostumerDet> {
                           )
                       ),
                       // onSaved: ,
-                      onChanged: (String newValue) async {
-                        if (dropDownValue2 != null &&dropDownValue2.isNotEmpty) {
+                      onChanged: (String? newValue) async {
+                        if (dropDownValue2 != null &&dropDownValue2!.isNotEmpty) {
                           setState(() {
                             dropDownValue2 = null;
                           });
@@ -513,7 +512,7 @@ class _CostumerDetState extends State<CostumerDet> {
                         'שעות פנויות',
                       ),
                       // ignore: missing_return
-                      validator: (String input) {
+                      validator: (String? input) {
                         if(input == null || input.isEmpty) return 'בחר שעה';
                         if(input == 'כל השעות תפוסות') return 'נא לקבוע תאריך שונה';
                       },
@@ -538,7 +537,7 @@ class _CostumerDetState extends State<CostumerDet> {
                             ),
                           )
                       ),
-                      onChanged: (String newValue) {
+                      onChanged: (String? newValue) {
                         setState(() {
                           dropDownValue2 = newValue;
                         });
@@ -557,19 +556,21 @@ class _CostumerDetState extends State<CostumerDet> {
                   // SizedBox(height: 40,),
 
                   Center(
-                    child: RaisedButton(
-                      color: Colors.black,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black
+                      ),
                       onPressed: () async {
                         //Implement
-                        if(_formKey.currentState.validate()) {
+                        if(_formKey.currentState!.validate()) {
                           if(dropDownValue3 == '1') {
-                            List<String> timeList = List();
-                            timeList.add(dropDownValue2);
+                            List<String> timeList = [];
+                            timeList.add(dropDownValue2!);
                             Appointment currentApp = Appointment(
                                 controlName.text,
                                 controlNum.text,
-                                dropDownValue1.split('-')[1],
-                                dropDownValue1.split('-')[0],
+                                dropDownValue1!.split('-')[1],
+                                dropDownValue1!.split('-')[0],
                                 1,
                                 timeList);
                             bool alreadyAppointed = await db
@@ -581,7 +582,7 @@ class _CostumerDetState extends State<CostumerDet> {
                               showAppDoneAlertDialog(context);
                               //show "appointed successfully" pop up
                             } else {
-                              DocumentSnapshot prevApp = await db
+                              DocumentSnapshot? prevApp = await db
                                   .returnAppointmentData(controlNum.text);
                               //UPDATE ONLY ALLOWED 24 HOURS BEFORE
                               //show "do u want to update ur appointment ? " pop
@@ -590,7 +591,7 @@ class _CostumerDetState extends State<CostumerDet> {
                               setState(() {
                                 showUpdateAlertDialog(
                                     context,
-                                    prevApp.get('date'),
+                                    prevApp!.get('date'),
                                     prevApp.get('time')[0],
                                     currentApp
                                 );
@@ -601,8 +602,8 @@ class _CostumerDetState extends State<CostumerDet> {
                             sendNotifications(currentApp);
                             return;
                           }else if (dropDownValue3 == '2'){
-                            List<String> timeList = List();
-                            timeList.add(dropDownValue2);
+                            List<String> timeList = [];
+                            timeList.add(dropDownValue2!);
                             for(int i=0 ; i<hours.length ; i++){
                               if(hours[i] == dropDownValue2){
                                 timeList.add(hours[i+1]);
@@ -612,8 +613,8 @@ class _CostumerDetState extends State<CostumerDet> {
                             Appointment currentApp = Appointment(
                                 controlName.text,
                                 controlNum.text,
-                                dropDownValue1.split('-')[1],
-                                dropDownValue1.split('-')[0],
+                                dropDownValue1!.split('-')[1],
+                                dropDownValue1!.split('-')[0],
                                 2,
                                 timeList);
                             bool alreadyAppointed = await db
@@ -624,7 +625,7 @@ class _CostumerDetState extends State<CostumerDet> {
                               showAppDoneAlertDialog(context);
                               //show "appointed successfully" pop up
                             } else {
-                              DocumentSnapshot prevApp = await db
+                              DocumentSnapshot? prevApp = await db
                                   .returnAppointmentData(controlNum.text);
                               //UPDATE ONLY ALLOWED 24 HOURS BEFORE
                               //show "do u want to update ur appointment ? " pop
@@ -633,7 +634,7 @@ class _CostumerDetState extends State<CostumerDet> {
                               setState(() {
                                 showUpdateAlertDialog(
                                     context,
-                                    prevApp.get('date'),
+                                    prevApp!.get('date'),
                                     prevApp.get('time')[0],
                                     currentApp
                                 );
@@ -644,8 +645,8 @@ class _CostumerDetState extends State<CostumerDet> {
                             sendNotifications(currentApp);
 
                           } else {
-                            List<String> timeList = List();
-                            timeList.add(dropDownValue2);
+                            List<String> timeList = [];
+                            timeList.add(dropDownValue2!);
                             for(int i=0 ; i<hours.length ; i++){
                               if(hours[i] == dropDownValue2){
                                 timeList.add(hours[i+1]);
@@ -656,8 +657,8 @@ class _CostumerDetState extends State<CostumerDet> {
                             Appointment currentApp = Appointment(
                                 controlName.text,
                                 controlNum.text,
-                                dropDownValue1.split('-')[1],
-                                dropDownValue1.split('-')[0],
+                                dropDownValue1!.split('-')[1],
+                                dropDownValue1!.split('-')[0],
                                 3,
                                 timeList);
                             bool alreadyAppointed = await db
@@ -668,7 +669,7 @@ class _CostumerDetState extends State<CostumerDet> {
                               showAppDoneAlertDialog(context);
                               //show "appointed successfully" pop up
                             } else {
-                              DocumentSnapshot prevApp = await db
+                              DocumentSnapshot? prevApp = await db
                                   .returnAppointmentData(controlNum.text);
                               //UPDATE ONLY ALLOWED 24 HOURS BEFORE
                               //show "do u want to update ur appointment ? " pop
@@ -677,7 +678,7 @@ class _CostumerDetState extends State<CostumerDet> {
                               setState(() {
                                 showUpdateAlertDialog(
                                     context,
-                                    prevApp.get('date'),
+                                    prevApp!.get('date'),
                                     prevApp.get('time')[0],
                                     currentApp
                                 );

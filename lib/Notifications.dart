@@ -5,13 +5,13 @@ import 'Appointment.dart';
 
 
 class LocalNotification {
-  Appointment _myApp;
+ late Appointment _myApp;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
-  AndroidInitializationSettings androidInitializationSettings;
-  IOSInitializationSettings iosInitializationSettings;
-  InitializationSettings initializationSettings;
+  late AndroidInitializationSettings androidInitializationSettings;
+  late IOSInitializationSettings iosInitializationSettings;
+  late InitializationSettings initializationSettings;
 
   LocalNotification(this._myApp);
   LocalNotification.ass();
@@ -23,7 +23,7 @@ class LocalNotification {
     iosInitializationSettings = IOSInitializationSettings(
         onDidReceiveLocalNotification: onDidReceiveLocalNotification);
     initializationSettings = InitializationSettings(
-        androidInitializationSettings, iosInitializationSettings);
+        android: androidInitializationSettings, iOS: iosInitializationSettings);
     await flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: onSelectNotification);
   }
@@ -40,14 +40,14 @@ class LocalNotification {
     AndroidNotificationDetails androidNotificationDetails =
     AndroidNotificationDetails(
         'Channel ID', 'Channel title', 'channel body',
-        priority: Priority.High,
-        importance: Importance.Max,
+        priority: Priority.high,
+        importance: Importance.max,
         ticker: 'test');
 
     IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
 
     NotificationDetails notificationDetails =
-    NotificationDetails(androidNotificationDetails, iosNotificationDetails);
+    NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
     await flutterLocalNotificationsPlugin.show(
         0, 'Hello there', 'please subscribe my channel', notificationDetails);
   }
@@ -61,31 +61,33 @@ class LocalNotification {
     AndroidNotificationDetails androidNotificationDetails =
     AndroidNotificationDetails(
         'second channel ID', 'second Channel title', 'second channel body',
-        priority: Priority.High,
-        importance: Importance.Max,
+        priority: Priority.high,
+        importance: Importance.max,
         ticker: 'test');
     IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
 
     NotificationDetails notificationDetails =
-    NotificationDetails(androidNotificationDetails, iosNotificationDetails);
+    NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
     await flutterLocalNotificationsPlugin.schedule(1, 'שלום ${_myApp.name}',
         "להזכירך!" + "\n" + "תורך היום" + "${_myApp.time[0]}" + "\n" + "נא להגיע 5 דקות לפני!",
         timeDelayed, notificationDetails);
   }
 
-  Future onSelectNotification(String payLoad) {
+  Future onSelectNotification(String? payLoad) {
     if (payLoad != null) {
       print(payLoad);
-    }
 
+    }
+    Future<String> p = payLoad as Future<String>;
+    return p;
     // we can set navigator to navigate another screen
   }
 
   Future onDidReceiveLocalNotification(
-      int id, String title, String body, String payload) async {
+      int id, String? title, String? body, String? payload) async {
     return AlertDialog(
-      title: Text(title),
-      content: Text(body),
+      title: Text(title!),
+      content: Text(body!),
       actions: <Widget>[
         // AlertDialogAction(
         // isDefaultAction: true,

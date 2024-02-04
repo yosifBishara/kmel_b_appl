@@ -1,17 +1,17 @@
 import 'package:flutter/widgets.dart';
 
 class SizeConfig {
-  MediaQueryData _mediaQueryData;
-  double screenWidth;
-  double screenHeight;
-  double blockSizeHorizontal;
+  late MediaQueryData _mediaQueryData;
+  late double screenWidth;
+  late double screenHeight;
+  late double blockSizeHorizontal;
 
   MediaQueryData get mediaQueryData => _mediaQueryData;
-  double blockSizeVertical;
-  double _safeAreaHorizontal;
-  double _safeAreaVertical;
-  double safeBlockHorizontal;
-  double safeBlockVertical;
+  late double blockSizeVertical;
+  late double _safeAreaHorizontal;
+  late double _safeAreaVertical;
+  late double safeBlockHorizontal;
+  late double safeBlockVertical;
 
   void init(BuildContext context){
     _mediaQueryData = MediaQuery.of(context);

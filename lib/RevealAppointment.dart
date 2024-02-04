@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'myFirestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -51,7 +52,7 @@ class _RevealState extends State<Reveal> {
   }
 
   areUSureAlert(BuildContext context){
-    Widget yesButton = FlatButton(
+    Widget yesButton = TextButton(
       child: Text('כן'),
       onPressed: () async {
         await db.deleteApp(controlNum.text);
@@ -61,7 +62,7 @@ class _RevealState extends State<Reveal> {
       },
     );
 
-    Widget noButton = FlatButton(
+    Widget noButton = TextButton(
       child: Text('לא'),
       onPressed: () {
         Navigator.pushNamed(context, '/home');
@@ -90,7 +91,7 @@ class _RevealState extends State<Reveal> {
   }
 
   _showCustomerAppointment(BuildContext context) async {
-    DocumentSnapshot doc = await db.returnAppointmentData(controlNum.text);
+    DocumentSnapshot? doc = await db.returnAppointmentData(controlNum.text);
 
     AlertDialog alertNotHasApp = AlertDialog(
       title: Text(""),
@@ -106,7 +107,7 @@ class _RevealState extends State<Reveal> {
         if(doc == null){
           return alertNotHasApp;
         }
-        Widget yesButton = FlatButton(
+        Widget yesButton = TextButton(
           child: Text('כן'),
           onPressed: () {
             Navigator.pushNamed(context, '/home');
@@ -114,7 +115,7 @@ class _RevealState extends State<Reveal> {
           },
         );
 
-        Widget noButton = FlatButton(
+        Widget noButton = TextButton(
           child: Text('לא'),
           onPressed: () {
             Navigator.pushNamed(context, '/home');
@@ -141,9 +142,9 @@ class _RevealState extends State<Reveal> {
 
   @override
   Widget build(BuildContext context) {
-    controlNum.text = null;
+    controlNum.text = '';
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           ''
@@ -179,7 +180,7 @@ class _RevealState extends State<Reveal> {
                       if (!(controlNum.text[0]=='0' && controlNum.text[1]=='5' && controlNum.text.length==10))
                         return 'מספר טלפון לא תקין';
                     },
-                    maxLengthEnforced: true,
+                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
                     maxLength: 10,
                     keyboardType: TextInputType.number,
                     controller: controlNum,
@@ -205,9 +206,9 @@ class _RevealState extends State<Reveal> {
 
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: FlatButton(
+                    child: TextButton(
                       onPressed: () {
-                        if(_formKey.currentState.validate()) {
+                        if(_formKey.currentState!.validate()) {
                           Navigator.pushNamed(context, '/home');
                           if (controlNum.text.isNotEmpty) {
                             _showCustomerAppointment(context);
@@ -224,9 +225,13 @@ class _RevealState extends State<Reveal> {
                           ),
                         ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(color: Colors.grey),
+                      style: ButtonStyle(
+                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: BorderSide(color: Colors.grey),
+                              )
+                          )
                       ),
                     ),
                   ),

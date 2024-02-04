@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
 
 
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.grey[800],
       body: Container(
         width: x.screenWidth,
@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: FlatButton(
+                                  child: TextButton(
                                     onPressed: () {
                                       Navigator.pushNamed(context, '/reveal_appointment');
                                     }, // change this to real function
@@ -159,9 +159,13 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                      side: BorderSide(color: Colors.grey),
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                          RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(18),
+                                            side: BorderSide(color: Colors.grey),
+                                        )
+                                      )
                                     ),
                                   ),
                                 ),
@@ -169,7 +173,7 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: FlatButton(
+                                  child: TextButton(
                                     onPressed: () {
                                       Navigator.pushNamed(context, '/fill_details');
                                     }, // change this to real function
@@ -183,9 +187,13 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                      side: BorderSide(color: Colors.grey),
+                                    style: ButtonStyle(
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              side: BorderSide(color: Colors.grey),
+                                            )
+                                        )
                                     ),
                                   ),
                                 ),

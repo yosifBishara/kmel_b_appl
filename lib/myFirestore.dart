@@ -59,6 +59,7 @@ class FireHelper {
 
   Future<bool> deleteApp(String phone_num) async {
     try {
+      var s = await _firestore.collection('appointments').doc(phone_num);
       await _firestore.collection('appointments').doc(phone_num).delete();
       return true;
     } catch (e) {

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kmel_bishara_app/myFirestore.dart';
@@ -20,7 +22,8 @@ class _CostumerDetState extends State<CostumerDet> {
   LocalNotification _lNf = LocalNotification.ass();
   final _formKey = GlobalKey<FormState>();
   final controlName = TextEditingController(),controlNum = TextEditingController();
-  late String? dropDownValue1,dropDownValue2,dropDownValue3,nameField,phoneField;
+  late String? dropDownValue1='', dropDownValue2='', dropDownValue3, nameField, phoneField;
+  bool selectedAmount = false, selectedDate = false, selectedHour = false;
   DateTime today = DateTime.now();
   List<String> weekDays = ['ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת',
     'ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת'];
@@ -388,7 +391,7 @@ class _CostumerDetState extends State<CostumerDet> {
                       validator: (String? input) {
                         if(input == null || input.isEmpty) return 'בחר כמות';
                       },
-                      value: dropDownValue3,
+                      value: selectedAmount ? dropDownValue3 : null,
                       dropdownColor: Colors.black,
                       icon: Icon(
                         Icons.arrow_downward,
@@ -412,6 +415,7 @@ class _CostumerDetState extends State<CostumerDet> {
                       onChanged: (String? newValue) async {
                         setState(() {
                           dropDownValue3 = newValue!;
+                          selectedAmount = true;
                         });
                         if(dropDownValue1!=null && dropDownValue1!.isNotEmpty) {
                           if (dropDownValue2 != null &&dropDownValue2!.isNotEmpty) {
@@ -452,7 +456,7 @@ class _CostumerDetState extends State<CostumerDet> {
                       validator: (String? input) {
                         if(input==null || input.isEmpty) return 'הזן תאריך תור';
                       },
-                      value: dropDownValue1,
+                      value: selectedDate ? dropDownValue1 : null,
                       dropdownColor: Colors.black,
                       icon: Icon(
                         Icons.arrow_downward,
@@ -478,6 +482,7 @@ class _CostumerDetState extends State<CostumerDet> {
                         if (dropDownValue2 != null &&dropDownValue2!.isNotEmpty) {
                           setState(() {
                             dropDownValue2 = null;
+                            selectedDate = true;
                           });
                         }
                         setState(() {
@@ -516,7 +521,7 @@ class _CostumerDetState extends State<CostumerDet> {
                         if(input == null || input.isEmpty) return 'בחר שעה';
                         if(input == 'כל השעות תפוסות') return 'נא לקבוע תאריך שונה';
                       },
-                      value: dropDownValue2,
+                      value: selectedHour ? dropDownValue2: null,
                       dropdownColor: Colors.black,
                       icon: Icon(
                         Icons.arrow_downward,
@@ -540,6 +545,7 @@ class _CostumerDetState extends State<CostumerDet> {
                       onChanged: (String? newValue) {
                         setState(() {
                           dropDownValue2 = newValue;
+                          selectedHour = true;
                         });
                       },
                       items: availableHours.map<DropdownMenuItem<String>>((String value) {

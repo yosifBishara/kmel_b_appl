@@ -51,11 +51,11 @@ class _RevealState extends State<Reveal> {
     );
   }
 
-  areUSureAlert(BuildContext context){
+  areUSureAlert(BuildContext context, String phoneNumber){
     Widget yesButton = TextButton(
       child: Text('כן'),
       onPressed: () async {
-        await db.deleteApp(controlNum.text);
+        await db.deleteApp(phoneNumber);
         await FlutterLocalNotificationsPlugin().cancelAll();
         Navigator.pushNamed(context, '/home');
         appRemovedSucc(context);
@@ -90,8 +90,8 @@ class _RevealState extends State<Reveal> {
     );
   }
 
-  _showCustomerAppointment(BuildContext context) async {
-    DocumentSnapshot? doc = await db.returnAppointmentData(controlNum.text);
+  _showCustomerAppointment(BuildContext context, String phoneNumber) async {
+    DocumentSnapshot? doc = await db.returnAppointmentData(phoneNumber);
 
     AlertDialog alertNotHasApp = AlertDialog(
       title: Text(""),
@@ -110,8 +110,8 @@ class _RevealState extends State<Reveal> {
         Widget yesButton = TextButton(
           child: Text('כן'),
           onPressed: () {
-            Navigator.pushNamed(context, '/home');
-            areUSureAlert(context);
+            // Navigator.pushNamed(context, '/home');
+            areUSureAlert(context, phoneNumber);
           },
         );
 
@@ -209,9 +209,9 @@ class _RevealState extends State<Reveal> {
                     child: TextButton(
                       onPressed: () {
                         if(_formKey.currentState!.validate()) {
-                          Navigator.pushNamed(context, '/home');
+                          // Navigator.pushNamed(context, '/home');
                           if (controlNum.text.isNotEmpty) {
-                            _showCustomerAppointment(context);
+                            _showCustomerAppointment(context, controlNum.text);
                           }
                         }
                       }, // change this to real function

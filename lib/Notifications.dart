@@ -29,7 +29,7 @@ class LocalNotification {
   }
 
   void _showNotifications() async {
-    await notification();
+    // await notification();
   }
 
   void _showNotificationsAfterSecond() async {
@@ -39,7 +39,7 @@ class LocalNotification {
   Future<void> notification() async {
     AndroidNotificationDetails androidNotificationDetails =
     AndroidNotificationDetails(
-        'Channel ID', 'Channel title', 'channel body',
+        'Channel ID', 'Channel title',
         priority: Priority.high,
         importance: Importance.max,
         ticker: 'test');
@@ -60,7 +60,7 @@ class LocalNotification {
     var timeDelayed = appTime.subtract(Duration(hours: 2));
     AndroidNotificationDetails androidNotificationDetails =
     AndroidNotificationDetails(
-        'second channel ID', 'second Channel title', 'second channel body',
+        'second channel ID', 'second Channel title',
         priority: Priority.high,
         importance: Importance.max,
         ticker: 'test');

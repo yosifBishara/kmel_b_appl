@@ -298,7 +298,7 @@ class _CostumerDetState extends State<CostumerDet> {
         resizeToAvoidBottomPadding: false,
         backgroundColor: Colors.grey[800],
         appBar: AppBar(
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.White,
           centerTitle: true,
           title: Text('מילוי פרטים'),
 

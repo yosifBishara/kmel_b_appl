@@ -4,8 +4,7 @@ class Appointment {
   late String _date;
   late String _day;
   late int _persons;
-  late List<String> _time;
-  late String? _token;
+  late List _time;
 
   Appointment(this._fullName,this._phone_num,this._date,this._day,this._persons,this._time);
 
@@ -15,7 +14,7 @@ class Appointment {
   String get date => _date;
   String get day => _day;
   int get persons => _persons;
-  List<String> get time => _time;
+  List get time => _time;
 
   //get map from Appointment object
   Map<String, dynamic> appointmentToMap() {
@@ -26,7 +25,6 @@ class Appointment {
     map['day'] = _day;
     map['persons'] = _persons;
     map['time'] = _time;
-    map['token'] = _token;
     return map;
   }
 
@@ -38,7 +36,6 @@ class Appointment {
     this._day = map['day'];
     this._persons = map['persons'];
     this._time = map['time'];
-    this._token = map['token'];
   }
 
 }

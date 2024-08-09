@@ -40,6 +40,8 @@ dependencies:
   flutter_local_notifications_platform_interface:
   flutter_markdown:
   firebase_messaging:
+  package_info_plus: ^4.2.0
+
 
 
 

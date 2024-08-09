@@ -28,14 +28,6 @@ class LocalNotification {
         onSelectNotification: onSelectNotification);
   }
 
-  void _showNotifications() async {
-    // await notification();
-  }
-
-  void _showNotificationsAfterSecond() async {
-    await notificationBefore2Hours();
-  }
-
   Future<void> notification() async {
     AndroidNotificationDetails androidNotificationDetails =
     AndroidNotificationDetails(
@@ -54,7 +46,7 @@ class LocalNotification {
 
   Future<void> notificationBefore2Hours() async {
     initializing();
-    List<String> Date = _myApp.date.split('/');
+    List<String> Date = _myApp.date.split('.');
     List<String> time = _myApp.time[0].split(':');
     DateTime appTime = DateTime(int.parse(Date[2]),int.parse(Date[1]),int.parse(Date[0]),int.parse(time[0]),int.parse(time[1])) ;
     var timeDelayed = appTime.subtract(Duration(hours: 2));
@@ -69,7 +61,7 @@ class LocalNotification {
     NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
     await flutterLocalNotificationsPlugin.schedule(1, 'שלום ${_myApp.name}',
-        "להזכירך!" + "\n" + "תורך היום" + "${_myApp.time[0]}" + "\n" + "נא להגיע 5 דקות לפני!",
+        "להזכירך!" + "\n" + "תורך היום " + "${_myApp.time[0]}" + "\n" + "נא להגיע 5 דקות לפני!",
         timeDelayed, notificationDetails);
   }
 
@@ -88,14 +80,7 @@ class LocalNotification {
     return AlertDialog(
       title: Text(title!),
       content: Text(body!),
-      actions: <Widget>[
-        // AlertDialogAction(
-        // isDefaultAction: true,
-        // onPressed: () {
-        //   print("");
-        // },
-        //     child: Text("Okay")),
-      ],
+      actions: <Widget>[],
     );
   }
 }

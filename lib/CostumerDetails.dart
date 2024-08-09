@@ -1,13 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:kmel_bishara_app/myFirestore.dart';
+import 'package:kmel_bishara_app/constants.dart';
+import 'package:kmel_bishara_app/firestoreClient.dart';
+import 'package:kmel_bishara_app/globalConfig.dart';
 import 'dart:async';
 import 'Appointment.dart';
 import 'Notifications.dart';
 import 'package:flutter/services.dart';
-
-
-
 
 class CostumerDet extends StatefulWidget {
   @override
@@ -16,52 +15,23 @@ class CostumerDet extends StatefulWidget {
 
 class _CostumerDetState extends State<CostumerDet> {
 
-  FireHelper db = FireHelper();
   LocalNotification _lNf = LocalNotification.ass();
   final _formKey = GlobalKey<FormState>();
   final controlName = TextEditingController(),controlNum = TextEditingController();
-  late String? dropDownValue1='', dropDownValue2='', dropDownValue3, nameField, phoneField;
+  late String? dateDropDownValue='', timeDropDownValue='', personsDropDownValue = '', nameField, phoneField;
   bool selectedAmount = false, selectedDate = false, selectedHour = false;
   DateTime today = DateTime.now();
-  List<String> weekDays = ['ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת',
-    'ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת'];
-  List<String> hours = [
-    '13:00',
-    '13:25',
-    '13:50',
-    '14:15',
-    '14:40',
-    '15:05',
-    '15:30',
-    '15:55',
-    '16:20',
-    '16:45',
-    '17:10',
-    '17:35',
-    '18:00',
-    '18:25',
-    '18:50',
-    '19:15',
-    '19:40',
-    '20:05',
-    '20:30',
-    '20:55',
-    '21:20',
-    '21:45'
-  ];
+  // working hours list
+  // List hours = [];
   List<String> personCount = ['1', '2', '3'];
-
   List<String> availableHours = [];
 
   List<String> makeDatesDropDown() {
-
     DateTime tmp = DateTime.now();
     List<String> result = [];
-    for(int counter = 0 ; counter < 6 ; ){
-      if(tmp.weekday == 1){
-        counter--;
-      } else{
-        result.add('${weekDays[tmp.weekday]}-${tmp.day}/${tmp.month}/${tmp.year}');
+    for(int counter = 0 ; counter < 6 ;){
+      if (tmp.weekday != DateTime.monday){
+        result.add('${UtilConst.WEEK_DAYS[tmp.weekday]}-${tmp.day}.${tmp.month}.${tmp.year}');
         counter++;
       }
       tmp = tmp.add(Duration(days: 1));
@@ -69,212 +39,84 @@ class _CostumerDetState extends State<CostumerDet> {
     return result;
   }
 
-  List<String> splitString(String DateAndDay){
-    List<String> result = DateAndDay.split("-");
-    print(result);
-    return result;
+  Map<String, String> splitDateDropdownElement(String? dropdownElemVal){
+    if (dropdownElemVal == null || dropdownElemVal.isEmpty) {
+      return {'weekday': '', 'date': ''};
+    }
+    List<String> result = dropdownElemVal.split("-");
+    return {'weekday': result[0], 'date': result[1]};
   }
 
-  Future<void> make1TimeDropDown(BuildContext context) async {
-    if (dropDownValue1 != null) {
-      availableHours.clear();
-      if (dropDownValue1!.isNotEmpty) {
-        print('zbray');
-        Navigator.pushNamed(context, '/load');
-        for (int i = 0; i < hours.length ; i++) {
-          if(dropDownValue1!.split("-")[0]=='שישי' && i<1) { continue; }
-          if(dropDownValue1!.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
+  Future<Map> getAvailableHours (String date) async {
+    List unavailableHours = await fsc.getUnavailableTimes(date);
+    List workingTimes = await fsc.getWorkingTimes(date);
+    List availableHours = List.from(
+        Set.from(workingTimes).difference(Set.from(unavailableHours))
+    );
 
-          DateTime tmpHour = DateTime(today.year,today.month,today.day,int.parse(hours[i].split(':')[0]),int.parse(hours[i].split(':')[1]));
-          List<String> timeList = <String>[];
-          timeList.add(hours[i]);
-          Appointment tempApp = Appointment(
-              '', '', dropDownValue1!.split("-")[1],'', 1, timeList);
+    return { for (var item in availableHours) item : true };
+  }
 
-          // ignore: unrelated_type_equality_checks
-          bool taken = await db.takenDateTime(tempApp.date, hours[i]);
-          if (taken != true) {
-            if (dropDownValue1!.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
-              if(tmpHour.isAfter(today)){
-                availableHours.add(hours[i]);
-              }
-            } else {
-              availableHours.add(hours[i]);
-            }
-          }
+  String calculateNextHour(String hour, int offsetMinutes) {
+    List hourSplit = hour.split(':');
+    DateTime nextHour = DateTime(
+      today.year, today.month, today.day,
+      int.parse(hourSplit[0]), int.parse(hourSplit[1])
+    ).add(Duration(minutes: offsetMinutes));
+    return '${nextHour.hour}:${nextHour.minute == 0 ? '00' : nextHour.minute}';
+  }
+
+  DateTime hourAsDateTime(String hour) {
+    // Parse hours and minutes from the timeString
+    final parts = hour.split(':');
+    final hours = int.parse(parts[0]);
+    final minutes = int.parse(parts[1]);
+
+    // Create a DateTime object with the current date and the parsed time
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day, hours, minutes);
+  }
+
+  Future<List<String>> createTimeDropdown(String? persons, String? date, String? weekday, BuildContext context) async {
+    List<String> dropdownContent = [];
+    if ((date == null) || (date.isEmpty) || (persons == null) || (persons.isEmpty) || (weekday == null) || (weekday.isEmpty)) {
+      return dropdownContent;
+    }
+
+    Navigator.pushNamed(context, '/load');
+    await Future.delayed(Duration(milliseconds: 30));
+    Map availableHoursMap  = await getAvailableHours(date);
+    String fridayClosingHour = '18:30';
+
+    if (int.parse(persons) > 1) {
+      int offsetMinutes = fsc.timeOffsetMin;
+      for (String hour in availableHoursMap.keys) {
+
+        if ((weekday == 'שישי') && (hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour)))) {
+          break;
         }
-        if (availableHours.isEmpty) {
-          availableHours.add('כל השעות תפוסות');
+
+        String nextHour = calculateNextHour(hour, offsetMinutes);
+        String nextHour2 = calculateNextHour(nextHour, offsetMinutes);
+
+        if (persons == '2' && availableHoursMap.containsKey(nextHour)) {
+          dropdownContent.add(hour);
+        }
+
+        if (persons == '3' && availableHoursMap.containsKey(nextHour) && availableHoursMap.containsKey(nextHour2)) {
+          dropdownContent.add(hour);
         }
       }
-      print(availableHours);
-      Future.delayed(Duration(milliseconds: 10));
-      Navigator.of(context).pop();
     }
-  }
-
-  Future<void> make2TimeDropDown(BuildContext context) async {
-    if (dropDownValue1 != null) {
-      availableHours.clear();
-      if (dropDownValue1!.isNotEmpty) {
-        print('zbray');
-        Navigator.pushNamed(context, '/load');
-        for (int i = 0; i < hours.length - 1; i++) {
-          if(dropDownValue1!.split("-")[0]=='שישי' && i<1) { continue; }
-          if(dropDownValue1!.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
-
-          DateTime tmpHour1 = DateTime(
-              today.year,today.month,today.day,int.parse(hours[i].split(':')[0]),int.parse(hours[i].split(':')[1]));
-          DateTime tmpHour2 = DateTime(
-              today.year,today.month,today.day,int.parse(hours[i+1].split(':')[0]),int.parse(hours[i+1].split(':')[1]));
-          List<String> timeList = <String>[];
-          timeList.add(hours[i]);
-          timeList.add(hours[i+1]);
-          Appointment tempApp = Appointment(
-              '', '', dropDownValue1!.split("-")[1],'', 2, timeList);
-
-          // ignore: unrelated_type_equality_checks
-          bool taken1 = await db.takenDateTime(tempApp.date, hours[i]);
-          bool taken2 = await db.takenDateTime(tempApp.date, hours[i+1]);
-
-          if (taken1 != true && taken2 != true) {
-            if (dropDownValue1!.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
-              if(tmpHour1.isAfter(today)){
-                availableHours.add(hours[i]);
-              }
-            } else {
-              availableHours.add(hours[i]);
-            }
-          }
-        }
-        if (availableHours.isEmpty) {
-          availableHours.add('כל השעות תפוסות');
-        }
-      }
-      print(availableHours);
-      Future.delayed(Duration(milliseconds: 10));
-      Navigator.of(context).pop();
+    else {
+      dropdownContent = List.from(availableHoursMap.keys);
+      dropdownContent.removeWhere(
+              (hour) => hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour))
+      );
     }
-  }
-
-  Future<void> make3TimeDropDown(BuildContext context) async {
-    if (dropDownValue1 != null) {
-      availableHours.clear();
-      if (dropDownValue1!.isNotEmpty) {
-        print('zbray');
-        Navigator.pushNamed(context, '/load');
-        for (int i = 0; i < hours.length - 2 ; i++) {
-          if(dropDownValue1!.split("-")[0]=='שישי' && i<1) { continue; }
-          if(dropDownValue1!.split("-")[0]=='שישי' && hours[i-1] == '18:25' ){ break; }
-          DateTime tmpHour1 = DateTime(
-              today.year,today.month,today.day,int.parse(hours[i].split(':')[0]),int.parse(hours[i].split(':')[1]));
-          DateTime tmpHour2 = DateTime(
-              today.year,today.month,today.day,int.parse(hours[i+1].split(':')[0]),int.parse(hours[i+1].split(':')[1]));
-          List<String> timeList = <String>[];
-          timeList.add(hours[i]);
-          timeList.add(hours[i+1]);
-          timeList.add(hours[i+2]);
-          Appointment tempApp = Appointment(
-              '', '', dropDownValue1!.split("-")[1],'', 2, timeList);
-
-          // ignore: unrelated_type_equality_checks
-          bool taken1 = await db.takenDateTime(tempApp.date, hours[i]);
-          bool taken2 = await db.takenDateTime(tempApp.date, hours[i+1]);
-          bool taken3 = await db.takenDateTime(tempApp.date, hours[i+2]);
-
-          if (taken1 != true && taken2 != true && taken3 != true) {
-            if (dropDownValue1!.split("-")[1]=='${today.day}/${today.month}/${today.year}'){
-              if(tmpHour1.isAfter(today)){
-                availableHours.add(hours[i]);
-              }
-            } else {
-              availableHours.add(hours[i]);
-            }
-          }
-        }
-        if (availableHours.isEmpty) {
-          availableHours.add('כל השעות תפוסות');
-        }
-      }
-      print(availableHours);
-      Future.delayed(Duration(milliseconds: 10));
-      Navigator.of(context).pop();
-    }
-  }
-
-  showAppDoneAlertDialog(BuildContext context) {
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("!התור שלך נקבע בהצלחה"),
-      content: Text(
-        "$dropDownValue1 - $dropDownValue2" + "\n""תודה שבחרתם בסלון כמיל בשארה",
-      ),
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-  showUnchangedAlertDialog(BuildContext context) {
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("!שים לב"),
-      content: Text(".התור שלך לא השתנה"),
-
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-  showUpdateAlertDialog(BuildContext context, String prevDate, String prevHour, Appointment newApp){
-    //2 buttons
-    Widget yesButton = TextButton(
-      child: Text('כן'),
-      onPressed: () {
-        db.updateApp(newApp);
-        Navigator.pushNamed(context, '/home');
-        showAppDoneAlertDialog(context);
-      },
-    );
-
-    Widget noButton = TextButton(
-      child: Text('לא'),
-      onPressed: () {
-        Navigator.pushNamed(context, '/home');
-        showUnchangedAlertDialog(context);
-      },
-    );
-
-    //alert dialog
-    AlertDialog alert = AlertDialog(
-      title: Text("!שים לב"),
-      content: Text(
-        ":יש תור שנקבע קודם ב" + "\n" + '${prevDate} - ${prevHour}' + "\n" + "?האם תרצה לעדכן אותו",
-      ),
-      actions: [
-        yesButton,
-        noButton,
-      ],
-    );
-
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return alert;
-        }
-    );
+    await Future.delayed(Duration(milliseconds: 30));
+    Navigator.of(context).pop();
+    return List.from(Set.from(dropdownContent));
   }
 
   sendNotifications(Appointment myApp) {
@@ -283,10 +125,49 @@ class _CostumerDetState extends State<CostumerDet> {
     _lNf.notificationBefore2Hours();
   }
 
+  showTakenAppointmentDialog(BuildContext context) async {
+
+    Widget okButton = ElevatedButton(
+      child: Text('המשך'),
+      onPressed: () async {
+        availableHours = await createTimeDropdown(
+            personsDropDownValue,
+            splitDateDropdownElement(dateDropDownValue)['date'],
+            splitDateDropdownElement(dateDropDownValue)['weekday'],
+            context
+        );
+        Navigator.of(context).pop(true);
+      },
+    );
+
+    //alert dialog
+    AlertDialog alert = AlertDialog(
+      title: Text(
+        "מישהו תפס את התור לפניך!",
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.center,
+      ),
+      content: Text(
+        "נא לבחור שעה אחרת",
+        textDirection: TextDirection.rtl,
+      ),
+      actions: [
+        okButton,
+      ],
+    );
+
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return alert;
+        }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // makeTimeDropDown();
-    // Firebase.initializeApp();
+
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
@@ -304,7 +185,7 @@ class _CostumerDetState extends State<CostumerDet> {
         ),
         body: Container(
           width: MediaQuery.of(context).size.width * 0.98,
-          height: MediaQuery.of(context).size.height * 0.98765,
+          height: MediaQuery.of(context).size.height * 0.98,
           child: Form(
             key: _formKey,
             child: Padding(
@@ -313,73 +194,9 @@ class _CostumerDetState extends State<CostumerDet> {
 
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  //full name field
-                  TextFormField(
-                    enableSuggestions: true,
-                    // ignore: missing_return
-                    validator: (String? input) {
-                      if(input == null) return 'הזן שם';
-                      if(input.isEmpty) return 'הזן שם';
-                    },
-                    controller: controlName,
-                    key: Key('username'),
-                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                    maxLength: 25,
-                    textAlign: TextAlign.end,
-                    decoration: InputDecoration(
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white60, width: 2.5),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 2.5),
-                      ),
-                      hintText: 'שם מלא',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
 
-                  // SizedBox(height: 6,),
 
-                  //phone num field
-                  TextFormField(
-                    enableSuggestions: true,
-                    // ignore: missing_return
-                    validator: (value) {
-                      if(controlNum.text.isEmpty)
-                        return 'הזן מספר טלפון';
-
-                      if (!(controlNum.text[0]=='0' && controlNum.text[1]=='5' && controlNum.text.length==10))
-                        return 'מספר טלפון לא תקין';
-                    },
-                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                    maxLength: 10,
-                    keyboardType: TextInputType.number,
-                    controller: controlNum,
-                    key: Key('phone number'),
-                    textAlign: TextAlign.end,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white60, width: 2.5),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 2.5),
-                      ),
-                      hintText: 'מספר טלפון',
-                      hintStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-
+                  // Person Count DropDown
                   Center(
                     child: DropdownButtonFormField<String>(
                       hint: Text(
@@ -389,7 +206,7 @@ class _CostumerDetState extends State<CostumerDet> {
                       validator: (String? input) {
                         if(input == null || input.isEmpty) return 'בחר כמות';
                       },
-                      value: selectedAmount ? dropDownValue3 : null,
+                      value: selectedAmount ? personsDropDownValue : null,
                       dropdownColor: Colors.black,
                       icon: Icon(
                         Icons.arrow_downward,
@@ -411,27 +228,19 @@ class _CostumerDetState extends State<CostumerDet> {
                           )
                       ),
                       onChanged: (String? newValue) async {
-                        setState(() {
-                          dropDownValue3 = newValue!;
-                          selectedAmount = true;
-                        });
-                        if(dropDownValue1!=null && dropDownValue1!.isNotEmpty) {
-                          if (dropDownValue2 != null &&dropDownValue2!.isNotEmpty) {
-                            setState(() {
-                              dropDownValue2 = null;
-                            });
-                          }
-                          if (newValue == '1') {
-                            await make1TimeDropDown(context);
-                          } else if (newValue == '2') {
-                            await make2TimeDropDown(context);
-                          } else {
-                            await make3TimeDropDown(context);
-                          }
-
+                        personsDropDownValue = newValue!;
+                        selectedAmount = true;
+                        availableHours = await createTimeDropdown(
+                            newValue,
+                            splitDateDropdownElement(dateDropDownValue)['date'],
+                            splitDateDropdownElement(dateDropDownValue)['weekday'],
+                            context
+                        );
+                        if (availableHours.isEmpty) {
+                          availableHours = ['כל השעות תפוסות'];
                         }
+                        selectedHour = false;
                         setState(() {});
-
                       },
                       items: personCount.map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
@@ -442,19 +251,17 @@ class _CostumerDetState extends State<CostumerDet> {
                     ),
                   ),
 
-                  // SizedBox(height: 30,),
-
-                  //dates drop down
+                  // Dates drop down
                   Center(
                     child: DropdownButtonFormField(
                       hint: Text(
-                          'תאריכים פנויים'
+                          'תאריך ויום'
                       ),
                       // ignore: missing_return
                       validator: (String? input) {
                         if(input==null || input.isEmpty) return 'הזן תאריך תור';
                       },
-                      value: selectedDate ? dropDownValue1 : null,
+                      value: selectedDate ? dateDropDownValue : null,
                       dropdownColor: Colors.black,
                       icon: Icon(
                         Icons.arrow_downward,
@@ -475,29 +282,22 @@ class _CostumerDetState extends State<CostumerDet> {
                             ),
                           )
                       ),
-                      // onSaved: ,
                       onChanged: (String? newValue) async {
-                        if (dropDownValue2 != null &&dropDownValue2!.isNotEmpty) {
-                          setState(() {
-                            dropDownValue2 = null;
-                            selectedDate = true;
-                          });
+                        dateDropDownValue = newValue;
+                        selectedDate = true;
+                        availableHours = await createTimeDropdown(
+                            personsDropDownValue,
+                            splitDateDropdownElement(newValue)['date'],
+                            splitDateDropdownElement(newValue)['weekday'],
+                            context
+                        );
+                        if (availableHours.isEmpty) {
+                          availableHours = ['כל השעות תפוסות'];
                         }
-                        setState(() {
-                          dropDownValue1 = newValue;
-                        });
-                        if(dropDownValue3 == '1') {
-                          await make1TimeDropDown(context);
-                        } else if(dropDownValue3 == '2'){
-                          await make2TimeDropDown(context);
-                        } else if(dropDownValue3 == '3'){
-                          await make3TimeDropDown(context);
-                        }
-                        // dropDownValue1 = newValue;
+                        selectedHour = false;
                         setState(() {});
                       },
-                      items:
-                      makeDatesDropDown().map<DropdownMenuItem<String>>((String value) {
+                      items: makeDatesDropDown().map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -506,191 +306,100 @@ class _CostumerDetState extends State<CostumerDet> {
                     ),
                   ),
 
-                  // SizedBox(height: 30,),
-
-                  //hours drop down
-                  Center(
-                    child: DropdownButtonFormField<String>(
-                      hint: Text(
-                        'שעות פנויות',
-                      ),
-                      // ignore: missing_return
-                      validator: (String? input) {
-                        if(input == null || input.isEmpty) return 'בחר שעה';
-                        if(input == 'כל השעות תפוסות') return 'נא לקבוע תאריך שונה';
-                      },
-                      value: selectedHour ? dropDownValue2: null,
-                      dropdownColor: Colors.black,
-                      icon: Icon(
-                        Icons.arrow_downward,
-                        color: Colors.black,
-                        size: 30,
-                      ),
-                      iconSize: 24,
-                      elevation: 16,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 21,
-                      ),
-                      decoration: InputDecoration(
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Colors.black,
-                              width: 1,
-                            ),
-                          )
-                      ),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          dropDownValue2 = newValue;
-                          selectedHour = true;
-                        });
-                      },
-                      items: availableHours.map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                  // Time drop down
+                  DropdownButtonFormField<String>(
+                    hint: Text(
+                      'שעות פנויות',
                     ),
+                    // ignore: missing_return
+                    validator: (String? input) {
+                      if(input == null || input.isEmpty) return 'בחר שעה';
+                      if(input == 'כל השעות תפוסות') return 'נא לקבוע תאריך שונה';
+                    },
+                    value: selectedHour ? timeDropDownValue: null,
+                    dropdownColor: Colors.black,
+                    icon: Icon(
+                      Icons.arrow_downward,
+                      color: Colors.black,
+                      size: 30,
+                    ),
+                    iconSize: 24,
+                    elevation: 16,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 21,
+                    ),
+                    menuMaxHeight: MediaQuery.of(context).size.height * 0.65,
+                    decoration: InputDecoration(
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        )
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        timeDropDownValue = newValue;
+                        selectedHour = true;
+                      });
+                    },
+                    items: availableHours.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
                   ),
-
-
-
-                  // SizedBox(height: 40,),
-
+                  
+                  // Appoint button
                   Center(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black
                       ),
                       onPressed: () async {
-                        //Implement
-                        if(_formKey.currentState!.validate()) {
-                          if(dropDownValue3 == '1') {
-                            List<String> timeList = [];
-                            timeList.add(dropDownValue2!);
-                            Appointment currentApp = Appointment(
-                                controlName.text,
-                                controlNum.text,
-                                dropDownValue1!.split('-')[1],
-                                dropDownValue1!.split('-')[0],
-                                1,
-                                timeList);
-                            bool alreadyAppointed = await db
-                                .personAlreadyAppointed(currentApp.number);
-                            if (!(alreadyAppointed)) {
-                              db.addApp(currentApp);
-                              Navigator.pop(context);
-                              // Navigator.pushNamed(context, '/home');
-                              showAppDoneAlertDialog(context);
-                              //show "appointed successfully" pop up
-                            } else {
-                              DocumentSnapshot? prevApp = await db
-                                  .returnAppointmentData(controlNum.text);
-                              //UPDATE ONLY ALLOWED 24 HOURS BEFORE
-                              //show "do u want to update ur appointment ? " pop
-                              //if yes ,get new details, then update
-                              //if no, show "appointment did not change" & go back home
-                              setState(() {
-                                showUpdateAlertDialog(
-                                    context,
-                                    prevApp!.get('date'),
-                                    prevApp.get('time')[0],
-                                    currentApp
-                                );
-                              });
-                              //show "appointed successfully" pop up, if changed
-                              //
-                            }
-                            sendNotifications(currentApp);
-                            return;
-                          }else if (dropDownValue3 == '2'){
-                            List<String> timeList = [];
-                            timeList.add(dropDownValue2!);
-                            for(int i=0 ; i<hours.length ; i++){
-                              if(hours[i] == dropDownValue2){
-                                timeList.add(hours[i+1]);
-                                break;
-                              }
-                            }
-                            Appointment currentApp = Appointment(
-                                controlName.text,
-                                controlNum.text,
-                                dropDownValue1!.split('-')[1],
-                                dropDownValue1!.split('-')[0],
-                                2,
-                                timeList);
-                            bool alreadyAppointed = await db
-                                .personAlreadyAppointed(currentApp.number);
-                            if (!(alreadyAppointed)) {
-                              await db.addApp(currentApp);
-                              Navigator.pushNamed(context, '/home');
-                              showAppDoneAlertDialog(context);
-                              //show "appointed successfully" pop up
-                            } else {
-                              DocumentSnapshot? prevApp = await db
-                                  .returnAppointmentData(controlNum.text);
-                              //UPDATE ONLY ALLOWED 24 HOURS BEFORE
-                              //show "do u want to update ur appointment ? " pop
-                              //if yes ,get new details, then update
-                              //if no, show "appointment did not change" & go back home
-                              setState(() {
-                                showUpdateAlertDialog(
-                                    context,
-                                    prevApp!.get('date'),
-                                    prevApp.get('time')[0],
-                                    currentApp
-                                );
-                              });
-                              //show "appointed successfully" pop up, if changed
-                              //
-                            }
-                            sendNotifications(currentApp);
+                        if (_formKey.currentState!.validate()) {
+                          List<String> times = [timeDropDownValue!];
+                          int persons = int.parse(personsDropDownValue!);
+                          if (persons > 1) {
+                            String nextHour = calculateNextHour(timeDropDownValue!, fsc.timeOffsetMin);
+                            times.add(nextHour);
+                            if (persons > 2) times.add(calculateNextHour(nextHour, fsc.timeOffsetMin));
+                          }
+                          Map dateDaySplit = splitDateDropdownElement(dateDropDownValue!);
+                          String result = await fsc.makeNewAppointment(
+                              globalConfig.name,
+                              globalConfig.number,
+                              persons,
+                              dateDaySplit['weekday'],
+                              dateDaySplit['date'],
+                              times
+                          );
 
+                          sleep(Duration(milliseconds: 100));
+
+                          if (result == FireStoreArg.APPOINTMENT_PASSED) {
+                            // go back to home page
+                            setState(() {
+                              globalConfig.nextUserAppointment = Appointment(
+                                  globalConfig.name,
+                                  globalConfig.number,
+                                  dateDaySplit['date'],
+                                  dateDaySplit['weekday'],
+                                  persons,
+                                  times
+                              );
+                            });
+                            try {
+                              sendNotifications(globalConfig.nextUserAppointment!);
+                            } catch (e) {}
+                            Navigator.of(context).pushNamed('/homePage');
                           } else {
-                            List<String> timeList = [];
-                            timeList.add(dropDownValue2!);
-                            for(int i=0 ; i<hours.length ; i++){
-                              if(hours[i] == dropDownValue2){
-                                timeList.add(hours[i+1]);
-                                timeList.add(hours[i+2]);
-                                break;
-                              }
-                            }
-                            Appointment currentApp = Appointment(
-                                controlName.text,
-                                controlNum.text,
-                                dropDownValue1!.split('-')[1],
-                                dropDownValue1!.split('-')[0],
-                                3,
-                                timeList);
-                            bool alreadyAppointed = await db
-                                .personAlreadyAppointed(currentApp.number);
-                            if (!(alreadyAppointed)) {
-                              await db.addApp(currentApp);
-                              Navigator.pushNamed(context, '/home');
-                              showAppDoneAlertDialog(context);
-                              //show "appointed successfully" pop up
-                            } else {
-                              DocumentSnapshot? prevApp = await db
-                                  .returnAppointmentData(controlNum.text);
-                              //UPDATE ONLY ALLOWED 24 HOURS BEFORE
-                              //show "do u want to update ur appointment ? " pop
-                              //if yes ,get new details, then update
-                              //if no, show "appointment did not change" & go back home
-                              setState(() {
-                                showUpdateAlertDialog(
-                                    context,
-                                    prevApp!.get('date'),
-                                    prevApp.get('time')[0],
-                                    currentApp
-                                );
-                              });
-                              //show "appointed successfully" pop up, if changed
-                              //
-                            }
-                            sendNotifications(currentApp);
+                            await showTakenAppointmentDialog(context);
+                            setState(() {
+                              selectedHour = false;
+                            });
                           }
 
                         }
@@ -707,9 +416,6 @@ class _CostumerDetState extends State<CostumerDet> {
                       ),
                     ),
                   ),
-
-                  // SizedBox(height: 25,),
-
 
                   //bottom loihab
                   Center(
@@ -729,8 +435,6 @@ class _CostumerDetState extends State<CostumerDet> {
                       color: Colors.white,
                     ),
                   ),
-
-                  // SizedBox(height: 3,),
 
                   //CopyRigths~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   Row(

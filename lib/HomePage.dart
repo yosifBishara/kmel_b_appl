@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:kmel_bishara_app/SizeConfig.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:kmel_bishara_app/firestoreClient.dart';
+import 'package:kmel_bishara_app/globalConfig.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> {
     SizeConfig x = SizeConfig();
 
     _calling() async {
-      const url = 'tel:+972546441850';
+      const url = 'tel://0546441850';
       if (await canLaunchUrlString(url)) {
         await launchUrlString(url);
       } else {
@@ -70,6 +71,19 @@ class _HomePageState extends State<HomePage> {
               +'- במידה שקבעת תור והתחרטת, נא לבטל אותו מינימום שעתיים מוקדם.',
           textDirection: TextDirection.rtl,
         ),
+        actions: [
+          TextButton(
+            child: Text(
+                'המשך',
+              style: TextStyle(
+                fontSize: 15
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+          )
+        ],
       );
 
       // show the dialog
@@ -78,6 +92,52 @@ class _HomePageState extends State<HomePage> {
         builder: (BuildContext context) {
           return alert;
         },
+      );
+    }
+
+    showDeleteAlertDialog(BuildContext context) async {
+      //2 buttons
+      Widget yesButton = ElevatedButton(
+        child: Text('כן'),
+        onPressed: () async {
+          await fsc.deleteAppointment(globalConfig.nextUserAppointment!);
+          setState(() {
+            globalConfig.nextUserAppointment = null;
+          });
+          Navigator.of(context).pop(true);
+        },
+      );
+
+      Widget noButton = ElevatedButton(
+        child: Text('לא'),
+        onPressed: () {
+          Navigator.of(context).pop(false);
+        },
+      );
+
+      //alert dialog
+      AlertDialog alert = AlertDialog(
+        title: Text(
+            "!שים לב",
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          "האם תרצה למחוק את תורך " + '?',
+          textDirection: TextDirection.rtl,
+        ),
+        actions: [
+          yesButton,
+          noButton,
+        ],
+      );
+
+      return showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return alert;
+          }
       );
     }
 
@@ -102,38 +162,80 @@ class _HomePageState extends State<HomePage> {
 
 
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.grey[800],
-      body: Container(
-        width: x.screenWidth,
-        height: x.screenHeight,
-        child:Column(
-          children: [
-          
-
-              //logo picture
-
-
-                 Padding(
-                   padding: EdgeInsets.fromLTRB(0, 60,0, 50),
-                   child: Container(
-                     width: x.screenWidth,
-                     height: x.screenHeight*0.45,
-                     child: Center(
-                      child: Image.asset('./assets/kme1-06.png',
-                      filterQuality: FilterQuality.high,
-                      width: x.screenWidth,
-                      height: x.screenHeight,),
-                     ),
-                   ),
-                 ),
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.grey[800],
+        body: Container(
+          padding: EdgeInsets.fromLTRB(0,x.screenHeight*0.1,0, x.screenHeight*0.1),
+          width: x.screenWidth,
+          height: x.screenHeight,
+          child:Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
 
 
-              
-              Expanded(
-                flex:1,
-                child: Container(
+                //logo picture
+            Container(
+              width: x.screenWidth * 0.9,
+              height: x.screenHeight*0.2,
+              child: Card(
+                shadowColor: Colors.black,
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(MediaQuery
+                      .of(context)
+                      .size
+                      .width * 0.015),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Visibility(
+                        visible: (globalConfig.nextUserAppointment != null) && (globalConfig.nextUserAppointment!.date != ''),
+                        child: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () async {
+                            await showDeleteAlertDialog(context);
+                          },
+                        ),
+                      ),
+                      SizedBox(width: MediaQuery
+                          .of(context)
+                          .size
+                          .width * 0.2,),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 2, 8, 2),
+                        child: Text(
+                            (globalConfig.nextUserAppointment == null) ||
+                            (globalConfig.nextUserAppointment!.date == '')?
+                                     'לא נמצא עבורך תור במערכת' :
+                                     'התור שלך במערכת:'
+                                     + '\n' + '\n'
+                                     + globalConfig.nextUserAppointment!.day + ' - '
+                                     +  globalConfig.nextUserAppointment!.date + '\n'
+                                     + globalConfig.nextUserAppointment!.time.toString()
+                                         .replaceAll('[', '')
+                                         .replaceAll(']', ''),
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                                fontSize: 18
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ),
+
+              SizedBox(height: MediaQuery
+                  .of(context)
+                  .size
+                  .height * 0.095
+              ),
+
+              Container(
                   child: Column(
                       children: <Widget>[
                         //appointment btn
@@ -142,40 +244,19 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Expanded(
+                              Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextButton(
-                                    onPressed: () {
-                                      Navigator.pushNamed(context, '/reveal_appointment');
-                                    }, // change this to real function
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        'התור שלי',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(18),
-                                            side: BorderSide(color: Colors.grey),
-                                        )
-                                      )
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextButton(
-                                    onPressed: () {
-                                      Navigator.pushNamed(context, '/fill_details');
+                                    onPressed: () async {
+                                      if ((globalConfig.nextUserAppointment != null) && (globalConfig.nextUserAppointment!.date != '')) {
+                                        bool delRes = await showDeleteAlertDialog(context);
+                                        if (delRes) {
+                                          Navigator.pushNamed(context, '/fill_details');
+                                        }
+                                      } else {
+                                        Navigator.pushNamed(context, '/fill_details');
+                                      }
                                     }, // change this to real function
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -224,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: <Widget>[
                               Text(
-                                'צור קשר',
+                                'יצירת קשר',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -302,10 +383,10 @@ class _HomePageState extends State<HomePage> {
 
 
           ),
-              ),
-        ]),
-      ),
+          ]),
+        ),
 
+      ),
     );
 
   }

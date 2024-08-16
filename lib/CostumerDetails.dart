@@ -110,9 +110,12 @@ class _CostumerDetState extends State<CostumerDet> {
     }
     else {
       dropdownContent = List.from(availableHoursMap.keys);
-      dropdownContent.removeWhere(
-              (hour) => hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour))
-      );
+      if (weekday == 'שישי') {
+        dropdownContent.removeWhere(
+                (hour) =>
+                hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour))
+        );
+      }
     }
     await Future.delayed(Duration(milliseconds: 30));
     Navigator.of(context).pop();

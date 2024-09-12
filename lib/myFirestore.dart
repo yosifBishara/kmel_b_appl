@@ -26,7 +26,7 @@ class FireHelper {
     }
   }
 
-  Future<Appointment> getApp(String phone_num) async {
+  Future<Appointment?> getApp(String phone_num) async {
     DocumentSnapshot documentSnapshot;
     try {
       documentSnapshot = await _firestore.collection('appointments').doc(phone_num).get();
@@ -70,7 +70,7 @@ class FireHelper {
   Future<bool> takenDateTime(String date, String time) async {
     QuerySnapshot res = await _firestore.collection('appointments').get();
     List<DocumentSnapshot> docs = res.docs;
-    List<dynamic> timeList = List();
+    List<dynamic> timeList = [];
     for(int i=0 ; i < docs.length ; i++){
       timeList = docs[i].get('time');
       if(docs[i].get('date')==date){
@@ -96,7 +96,7 @@ class FireHelper {
     return false;
   }
 
-  Future<DocumentSnapshot> returnAppointmentData(String personNumber) async {
+  Future<DocumentSnapshot?> returnAppointmentData(String personNumber) async {
     QuerySnapshot res = await _firestore.collection('appointments').get();
     List<DocumentSnapshot> docs = res.docs;
     for(int i = 0 ; i < docs.length ; i++){

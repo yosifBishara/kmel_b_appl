@@ -1,11 +1,11 @@
 class Appointment {
-  String _fullName;
-  String _phone_num;
-  String _date;
-  String _day;
-  int _persons;
-  List<String> _time;
-  String _token;
+  late String _fullName;
+  late String _phone_num;
+  late String _date;
+  late String _day;
+  late int _persons;
+  late List<String> _time;
+  late String? _token;
 
   Appointment(this._fullName,this._phone_num,this._date,this._day,this._persons,this._time);
 
@@ -18,7 +18,7 @@ class Appointment {
   List<String> get time => _time;
 
   //get map from Appointment object
-  Map<String, String> appointmentToMap() {
+  Map<String, dynamic> appointmentToMap() {
     var map = Map<String, dynamic>();
     map['name'] = _fullName;
     map['phonenumber'] = _phone_num;

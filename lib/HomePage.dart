@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:kmel_bishara_app/SizeConfig.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -18,8 +18,8 @@ class _HomePageState extends State<HomePage> {
 
     _calling() async {
       const url = 'tel:+972546441850';
-      if (await canLaunch(url)) {
-        await launch(url);
+      if (await canLaunchUrlString(url)) {
+        await launchUrlString(url);
       } else {
         throw 'Could not launch $url';
       }
@@ -35,8 +35,8 @@ class _HomePageState extends State<HomePage> {
 
     _launchFb() async {
       const url = 'https://www.facebook.com/profile.php?id=100003938695430';
-      if (await canLaunch(url)) {
-        await launch(url, forceWebView: false, forceSafariVC: false);
+      if (await canLaunchUrlString(url)) {
+        await launchUrlString(url);
       } else {
         throw 'Could not launch $url';
       }
@@ -44,8 +44,8 @@ class _HomePageState extends State<HomePage> {
 
     _launchIg() async {
       const url = 'https://www.instagram.com/kmelbishara/';
-      if (await canLaunch(url)) {
-        await launch(url);
+      if (await canLaunchUrlString(url)) {
+        await launchUrlString(url);
       } else {
         throw 'Could not launch $url';
       }
@@ -53,8 +53,8 @@ class _HomePageState extends State<HomePage> {
 
     _launchLocation() async {
       const url = 'https://goo.gl/maps/Je4YhL6Kkg5HZHRo8';
-      if (await canLaunch(url)) {
-        await launch(url);
+      if (await canLaunchUrlString(url)) {
+        await launchUrlString(url);
       } else {
         throw 'Could not launch $url';
       }
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
 
 
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.grey[800],
       body: Container(
         width: x.screenWidth,
@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: FlatButton(
+                                  child: TextButton(
                                     onPressed: () {
                                       Navigator.pushNamed(context, '/reveal_appointment');
                                     }, // change this to real function
@@ -159,9 +159,13 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                      side: BorderSide(color: Colors.grey),
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                          RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(18),
+                                            side: BorderSide(color: Colors.grey),
+                                        )
+                                      )
                                     ),
                                   ),
                                 ),
@@ -169,7 +173,7 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: FlatButton(
+                                  child: TextButton(
                                     onPressed: () {
                                       Navigator.pushNamed(context, '/fill_details');
                                     }, // change this to real function
@@ -183,9 +187,13 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                      side: BorderSide(color: Colors.grey),
+                                    style: ButtonStyle(
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              side: BorderSide(color: Colors.grey),
+                                            )
+                                        )
                                     ),
                                   ),
                                 ),

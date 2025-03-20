@@ -59,10 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCGy3e7hy4db121FQEEtfRiwYGsY6-61X4',
-    appId: '1:76921127338:ios:85ed510bfbaf8c9d312bd3',
+    appId: '1:76921127338:ios:4eeb35efeaf3f82e312bd3',
     messagingSenderId: '76921127338',
     projectId: 'kmel-app-db',
-    storageBucket: 'kmel-app-db.appspot.com',
-    iosBundleId: 'com.myexample.kmelBApp',
+    storageBucket: 'kmel-app-db.firebasestorage.app',
+    iosBundleId: 'com.myexample.kmelBApp1',
   );
+
 }

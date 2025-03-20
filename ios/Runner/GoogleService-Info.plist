@@ -9,11 +9,11 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.myexample.kmelBApp</string>
+	<string>com.myexample.kmelBApp1</string>
 	<key>PROJECT_ID</key>
 	<string>kmel-app-db</string>
 	<key>STORAGE_BUCKET</key>
-	<string>kmel-app-db.appspot.com</string>
+	<string>kmel-app-db.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:76921127338:ios:85ed510bfbaf8c9d312bd3</string>
+	<string>1:76921127338:ios:4eeb35efeaf3f82e312bd3</string>
 </dict>
 </plist>

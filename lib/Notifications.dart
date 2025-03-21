@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
-
+import 'package:timezone/timezone.dart' as tz;
 import 'Appointment.dart';
 
 
@@ -10,22 +12,29 @@ class LocalNotification {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
   late AndroidInitializationSettings androidInitializationSettings;
-  late IOSInitializationSettings iosInitializationSettings;
+  late DarwinInitializationSettings iosInitializationSettings;
   late InitializationSettings initializationSettings;
 
   LocalNotification(this._myApp);
   LocalNotification.ass();
 
 
-
   void initializing() async {
+
     androidInitializationSettings = AndroidInitializationSettings('app_icon');
-    iosInitializationSettings = IOSInitializationSettings(
-        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+    iosInitializationSettings = DarwinInitializationSettings();
     initializationSettings = InitializationSettings(
         android: androidInitializationSettings, iOS: iosInitializationSettings);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: onSelectNotification);
+    await flutterLocalNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) async {
+          // Handle the notification tap here
+          if (response.payload != null) {
+            final Map<String, dynamic> payloadData = jsonDecode(response.payload!);
+
+            onDidReceiveLocalNotification(response.id, payloadData['title'], payloadData['body'], response.payload);
+          }
+        });
   }
 
   Future<void> notification() async {
@@ -36,7 +45,7 @@ class LocalNotification {
         importance: Importance.max,
         ticker: 'test');
 
-    IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
+    DarwinNotificationDetails iosNotificationDetails = DarwinNotificationDetails();
 
     NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
@@ -56,13 +65,13 @@ class LocalNotification {
         priority: Priority.high,
         importance: Importance.max,
         ticker: 'test');
-    IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
+    DarwinNotificationDetails iosNotificationDetails = DarwinNotificationDetails();
 
     NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
-    await flutterLocalNotificationsPlugin.schedule(1, 'שלום ${_myApp.name}',
+    await flutterLocalNotificationsPlugin.zonedSchedule(1, 'שלום ${_myApp.name}',
         "להזכירך!" + "\n" + "תורך היום " + "${_myApp.time[0]}" + "\n" + "נא להגיע 5 דקות לפני!",
-        timeDelayed, notificationDetails);
+        tz.TZDateTime.from(timeDelayed, tz.local), notificationDetails, androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
   }
 
   Future onSelectNotification(String? payLoad) {
@@ -76,7 +85,7 @@ class LocalNotification {
   }
 
   Future onDidReceiveLocalNotification(
-      int id, String? title, String? body, String? payload) async {
+      int? id, String? title, String? body, String? payload) async {
     return AlertDialog(
       title: Text(title!),
       content: Text(body!),

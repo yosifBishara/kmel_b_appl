@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:kmel_bishara_app/authPage.dart';
 import 'package:kmel_bishara_app/firestoreClient.dart';
+import 'package:kmel_bishara_app/globalConfig.dart';
 import 'HomePage.dart';
 import 'CostumerDetails.dart';
 import 'loading.dart';
@@ -13,15 +14,21 @@ import 'package:package_info_plus/package_info_plus.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform
+      options: DefaultFirebaseOptions.currentPlatform
   );
 
+  // Get Application Version Update Info
   final PackageInfo packageInfo = await PackageInfo.fromPlatform();
   Map<String, dynamic> appUpdates = await fsc.getAppUpdateInfo(packageInfo.version);
   bool isPlatUpdate = (Platform.isAndroid && appUpdates['android']) || (Platform.isIOS && appUpdates['ios']);
   bool isUpdateInfoEmpty = (appUpdates['title'] == null) || (appUpdates['title'] == '')
       || (appUpdates['content'] == null) || (appUpdates['content'] == '');
 
+  // Get enabled Mondays and fridays
+  globalConfig.enabledMondayDates = await fsc.getRelevantEnabledMonday();
+  globalConfig.enabledFridayDates = await fsc.getRelevantEnabledFriday();
+
+  // Start App
   if (isPlatUpdate && !isUpdateInfoEmpty) {
     // Update app screen
     runApp(MaterialApp(
@@ -60,7 +67,7 @@ class UpdateScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.black,
         title: Text(
-            title,
+          title,
           textAlign: TextAlign.center,
         ),
       ),
@@ -84,9 +91,9 @@ class UpdateScreen extends StatelessWidget {
                   child: Text(
                     content,
                     style: TextStyle(
-                      fontSize: 25,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold
+                        fontSize: 25,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -100,5 +107,3 @@ class UpdateScreen extends StatelessWidget {
     );
   }
 }
-
-

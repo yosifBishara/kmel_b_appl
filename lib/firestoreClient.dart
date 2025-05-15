@@ -15,6 +15,8 @@ class FireStoreClient {
       .collection(FireStoreArg.USERS_COLLECTION_ID);
   final _appUpdateCollection = _firestore
       .collection(FireStoreArg.APP_UPDATE_INFO_COLLECTION_ID);
+  final _enabledMondayFridayCollection = _firestore
+      .collection(FireStoreArg.ENABLE_MONDAY_FRIDAY_INFO_COLLECTION_ID);
 
   List _workTimeList = [];
   int _timeOffsetMin = 0;
@@ -78,81 +80,81 @@ class FireStoreClient {
 
   Future<String> makeNewAppointment(String name, String number, int persons, String day, String date, List<String> times) async {
     return await _firestore.runTransaction((transaction) async {
-        // First phase: Read all required data
-        Map<String, DocumentSnapshot> timeSlots = {};
-        DocumentReference dateDocRef = _appointmentsCollection.doc(date);
-        DocumentSnapshot dateDocSnap = await transaction.get(dateDocRef);
+      // First phase: Read all required data
+      Map<String, DocumentSnapshot> timeSlots = {};
+      DocumentReference dateDocRef = _appointmentsCollection.doc(date);
+      DocumentSnapshot dateDocSnap = await transaction.get(dateDocRef);
 
-        // Collect all the time slot documents
-        for (String time in times) {
-          DocumentReference dr = dateDocRef
-              .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
-              .doc(time);
-          DocumentSnapshot ds = await transaction.get(dr);
-          timeSlots[time] = ds;
+      // Collect all the time slot documents
+      for (String time in times) {
+        DocumentReference dr = dateDocRef
+            .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
+            .doc(time);
+        DocumentSnapshot ds = await transaction.get(dr);
+        timeSlots[time] = ds;
+      }
+
+      DocumentReference userDr = _usersCollection.doc(number);
+      bool userExists = (await transaction.get(userDr)).exists;
+
+      // Check if any of the time slots are already taken
+      for (DocumentSnapshot ds in timeSlots.values) {
+        if (ds.exists) {
+          return FireStoreArg.TIME_ALREADY_TAKEN;
         }
+      }
 
-        DocumentReference userDr = _usersCollection.doc(number);
-        bool userExists = (await transaction.get(userDr)).exists;
+      // Second phase: Perform all writes
+      for (String time in times) {
+        DocumentReference dr = dateDocRef
+            .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
+            .doc(time);
 
-        // Check if any of the time slots are already taken
-        for (DocumentSnapshot ds in timeSlots.values) {
-          if (ds.exists) {
-            return FireStoreArg.TIME_ALREADY_TAKEN;
-          }
-        }
+        // Create new appointment for the time slot
+        transaction.set(dr, {
+          FireStoreArg.PHONE_NUM_FIELD: number,
+          FireStoreArg.NAME_FIELD: name,
+          FireStoreArg.DAY_FIELD: day,
+        });
+      }
 
-        // Second phase: Perform all writes
-        for (String time in times) {
-          DocumentReference dr = dateDocRef
-              .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
-              .doc(time);
+      // Ensure the date document exists, create it if it doesn't
+      if (!dateDocSnap.exists) {
+        transaction.set(dateDocRef, {
+          FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayUnion(times)
+        });
+      } else {
+        // Add the time slots to the unavailable times array
+        transaction.update(dateDocRef, {
+          FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayUnion(times)
+        });
+      }
 
-          // Create new appointment for the time slot
-          transaction.set(dr, {
-            FireStoreArg.PHONE_NUM_FIELD: number,
-            FireStoreArg.NAME_FIELD: name,
+      // Add to users collection
+      if (userExists) {
+        transaction.update(userDr, {
+          FireStoreArg.NAME_FIELD: name,
+          FireStoreArg.NEXT_APPOINTMENT_FIELD: {
+            FireStoreArg.DATE_FIELD: date,
             FireStoreArg.DAY_FIELD: day,
-          });
-        }
+            FireStoreArg.TIME_FIELD: times
+          }
+        });
+      } else {
+        transaction.set(userDr, {
+          FireStoreArg.NAME_FIELD: name,
+          FireStoreArg.NEXT_APPOINTMENT_FIELD: {
+            FireStoreArg.DATE_FIELD: date,
+            FireStoreArg.DAY_FIELD: day,
+            FireStoreArg.TIME_FIELD: times
+          }
+        });
+      }
 
-        // Ensure the date document exists, create it if it doesn't
-        if (!dateDocSnap.exists) {
-          transaction.set(dateDocRef, {
-            FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayUnion(times)
-          });
-        } else {
-          // Add the time slots to the unavailable times array
-          transaction.update(dateDocRef, {
-            FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayUnion(times)
-          });
-        }
-
-        // Add to users collection
-        if (userExists) {
-          transaction.update(userDr, {
-            FireStoreArg.NAME_FIELD: name,
-            FireStoreArg.NEXT_APPOINTMENT_FIELD: {
-              FireStoreArg.DATE_FIELD: date,
-              FireStoreArg.DAY_FIELD: day,
-              FireStoreArg.TIME_FIELD: times
-            }
-          });
-        } else {
-          transaction.set(userDr, {
-            FireStoreArg.NAME_FIELD: name,
-            FireStoreArg.NEXT_APPOINTMENT_FIELD: {
-              FireStoreArg.DATE_FIELD: date,
-              FireStoreArg.DAY_FIELD: day,
-              FireStoreArg.TIME_FIELD: times
-            }
-          });
-        }
-
-        return FireStoreArg.APPOINTMENT_PASSED;
-      });
+      return FireStoreArg.APPOINTMENT_PASSED;
+    });
   }
-  
+
   Future<Appointment?> getUserDetails(String number) async {
     DocumentSnapshot ds =  await _usersCollection.doc(number).get();
     if (!ds.exists) {
@@ -169,6 +171,36 @@ class FireStoreClient {
     );
   }
 
+  Future<void> deleteUserDetails(String number, Appointment? nextUserApp) async {
+    if (nextUserApp != null) {
+      await deleteAppointment(nextUserApp);
+    }
+    DocumentSnapshot ds =  await _usersCollection.doc(number).get();
+    if (ds.exists) { await _usersCollection.doc(number).delete(); }
+  }
+
+  Future<bool> deleteNextAppointmentIfOld(Appointment? nextUserApp) async {
+    if (nextUserApp != null && nextUserApp.date != '') {
+      DateTime now = DateTime.now();
+      List<String> dateSplit = nextUserApp.date.split('.');
+      List<String> timeSplit = nextUserApp.time[0].split(':');
+      DateTime nextAppDateTime = DateTime(
+        int.parse(dateSplit[2]),
+        int.parse(dateSplit[1]),
+        int.parse(dateSplit[0]),
+        int.parse(timeSplit[0]),
+        int.parse(timeSplit[1]),
+      );
+
+      if (nextAppDateTime.isBefore(now)) {
+        await deleteAppointment(nextUserApp);
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
   Future<void> deleteAppointment (Appointment appointment) async {
 
     for (String t in appointment.time) {
@@ -176,33 +208,35 @@ class FireStoreClient {
           .doc(appointment.date)
           .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
           .doc(t).get();
-      String appNum = await ds.get(FireStoreArg.PHONE_NUM_FIELD);
-      if (appNum != appointment.number) {
-        return;
-      }
+      if (ds.exists) {
+        String appNum = await ds.get(FireStoreArg.PHONE_NUM_FIELD);
+        if (appNum != appointment.number) {
+          return;
+        }
 
-      await _appointmentsCollection
-          .doc(appointment.date)
-          .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
-          .doc(t)
-          .delete();
-      await _appointmentsCollection
-          .doc(appointment.date)
-          .update({
-            FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayRemove([t])
-      });
+        await _appointmentsCollection
+            .doc(appointment.date)
+            .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
+            .doc(t)
+            .delete();
+        await _appointmentsCollection
+            .doc(appointment.date)
+            .update({
+          FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayRemove([t])
+        });
+      }
     }
-    
+
     await _usersCollection
         .doc(appointment.number).update({
-          FireStoreArg.NEXT_APPOINTMENT_FIELD: {
-            FireStoreArg.DATE_FIELD: '',
-            FireStoreArg.DAY_FIELD: '',
-            FireStoreArg.TIME_FIELD: []
-          }
-        }
+      FireStoreArg.NEXT_APPOINTMENT_FIELD: {
+        FireStoreArg.DATE_FIELD: '',
+        FireStoreArg.DAY_FIELD: '',
+        FireStoreArg.TIME_FIELD: []
+      }
+    }
     );
-    
+
   }
 
   Future<Map<String, dynamic>> getAppUpdateInfo (String appVersion) async {
@@ -225,6 +259,40 @@ class FireStoreClient {
 
     return info;
   }
+
+  Future<List<String>> getRelevantEnabledMondayOrFriday(String docId, String fieldId) async {
+    DocumentSnapshot ds = await _enabledMondayFridayCollection
+        .doc(docId).get();
+
+    if (!ds.exists) {
+      return [];
+    }
+
+    DateTime now = DateTime.now();
+    List enabledDatesList = ds.get(fieldId);
+    List<String> res = [];
+
+    for (int i=0; i<enabledDatesList.length ; i++) {
+      List<String> dateSplit = enabledDatesList[i].split(UtilConst.DOT);
+      DateTime dateDateTime = DateTime(int.parse(dateSplit[2]), int.parse(dateSplit[1]), int.parse(dateSplit[0]));
+      if (dateDateTime.isBefore(now)) {
+        continue;
+      }
+      res.add(enabledDatesList[i]);
+    }
+
+    return res;
+  }
+
+  Future<List<String>> getRelevantEnabledMonday() async {
+    return await getRelevantEnabledMondayOrFriday(FireStoreArg.ENABLE_MONDAY_DATES_DOC, FireStoreArg.ENABLED_MONDAY_DATES_FIELD);
+  }
+
+  Future<List<String>> getRelevantEnabledFriday() async {
+    return await getRelevantEnabledMondayOrFriday(FireStoreArg.ENABLE_FRIDAY_DATES_DOC, FireStoreArg.ENABLED_FRIDAY_DATES_FIELD);
+  }
+
+
 
 }
 

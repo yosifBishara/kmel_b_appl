@@ -5,6 +5,8 @@ class FireStoreArg {
   static const WORK_TIMES_COLLECTION_ID = 'work_times';
   static const USERS_COLLECTION_ID = 'users';
   static const APP_UPDATE_INFO_COLLECTION_ID = 'update_info';
+  static const ENABLE_MONDAY_FRIDAY_INFO_COLLECTION_ID = 'EnableMondayFriday';
+
   static const WORK_TIMES_DOC_ID_PREFIX = 'lessEquals-';
   static const WORK_TIMES_LIST_FIELD = 'times_list';
   static const UNAVAILABLE_TIMES_FIELD = 'unavailable_times';
@@ -23,7 +25,10 @@ class FireStoreArg {
   static const DAY_APPOINTMENTS_COLLECTION = 'day_appointments';
   static const TIME_ALREADY_TAKEN = 'time taken';
   static const APPOINTMENT_PASSED = 'appointment passed';
-
+  static const ENABLE_MONDAY_DATES_DOC = 'enableMondayDates';
+  static const ENABLED_MONDAY_DATES_FIELD = 'mondays';
+  static const ENABLE_FRIDAY_DATES_DOC = 'enableFridayDates';
+  static const ENABLED_FRIDAY_DATES_FIELD = 'fridays';
 
 }
 
@@ -31,8 +36,8 @@ class UtilConst {
   static const EMPTY_STRING = '';
   static const DOT = '.';
   static const BACK_SLASH = '/';
-  static const List<String> WEEK_DAYS = ['ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת',
-    'ראשון',' ','שלישי','רביעי','חמישי','שישי','שבת'];
+  static const List<String> WEEK_DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת',
+    'ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 
 
 }

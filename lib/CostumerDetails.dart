@@ -22,15 +22,18 @@ class _CostumerDetState extends State<CostumerDet> {
   bool selectedAmount = false, selectedDate = false, selectedHour = false;
   DateTime today = DateTime.now();
   // working hours list
-  // List hours = [];
   List<String> personCount = ['1', '2', '3'];
   List<String> availableHours = [];
 
   List<String> makeDatesDropDown() {
     DateTime tmp = DateTime.now();
     List<String> result = [];
-    for(int counter = 0 ; counter < 6 ;){
-      if (tmp.weekday != DateTime.monday){
+    for(int counter = 0 ; counter < 10 ;){
+      if ((tmp.weekday == DateTime.monday) && !(globalConfig.enabledMondayDates.contains('${tmp.day}.${tmp.month}.${tmp.year}'))) {
+        tmp = tmp.add(Duration(days: 1));
+        continue;
+
+      } else {
         result.add('${UtilConst.WEEK_DAYS[tmp.weekday]}-${tmp.day}.${tmp.month}.${tmp.year}');
         counter++;
       }
@@ -92,7 +95,11 @@ class _CostumerDetState extends State<CostumerDet> {
       int offsetMinutes = fsc.timeOffsetMin;
       for (String hour in availableHoursMap.keys) {
 
-        if ((weekday == 'שישי') && (hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour)))) {
+        if (
+          (weekday == 'שישי')
+          && (hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour)))
+          && !(globalConfig.enabledFridayDates.contains(date))
+        ) {
           break;
         }
 
@@ -110,7 +117,7 @@ class _CostumerDetState extends State<CostumerDet> {
     }
     else {
       dropdownContent = List.from(availableHoursMap.keys);
-      if (weekday == 'שישי') {
+      if (weekday == 'שישי' && !(globalConfig.enabledFridayDates.contains(date))) {
         dropdownContent.removeWhere(
                 (hour) =>
                 hourAsDateTime(hour).isAfter(hourAsDateTime(fridayClosingHour))

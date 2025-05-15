@@ -4,6 +4,8 @@ import 'package:kmel_bishara_app/globalConfig.dart';
 import 'dart:async';
 import 'Appointment.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -28,6 +30,50 @@ class _AuthPageState extends State<AuthPage> {
     }
     globalConfig.name = userDetails.name;
     return true;
+  }
+
+  _calling() async {
+    const url = 'tel://0546441850';
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  void _call(){
+    try {
+      _calling();
+    }catch(ex){
+      return;
+    }
+  }
+
+  _launchFb() async {
+    const url = 'https://www.facebook.com/profile.php?id=100003938695430';
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  _launchIg() async {
+    const url = 'https://www.instagram.com/kmelbishara/';
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  _launchLocation() async {
+    const url = 'https://goo.gl/maps/Je4YhL6Kkg5HZHRo8';
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
@@ -109,6 +155,15 @@ class _AuthPageState extends State<AuthPage> {
                             return;
                           }
                           isKnownUserFlag = await isKnownUser(newVal);
+                          if (isKnownUserFlag) {
+                            await fsc.deleteNextAppointmentIfOld(globalConfig.nextUserAppointment);
+                            globalConfig.nextUserAppointment = Appointment(
+                                globalConfig.nextUserAppointment!.name,
+                                globalConfig.nextUserAppointment!.number,
+                                '', '', 0, []
+                            );
+
+                          }
                           isNameFieldVisible = !isKnownUserFlag;
                           globalConfig.number = controlNum.text;
                           setState(() {});
@@ -175,7 +230,7 @@ class _AuthPageState extends State<AuthPage> {
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             if (_formKey.currentState!.validate()) {
                               globalConfig.name = controlName.text.isNotEmpty ? controlName.text : globalConfig.nextUserAppointment!.name ;
                               Navigator.pushNamed(context, '/homePage');
@@ -204,10 +259,84 @@ class _AuthPageState extends State<AuthPage> {
                         ),
                       ),
 
-                      // SizedBox(
-                      //     height: MediaQuery.of(context).size.height * 0.01,
-                      //     width: MediaQuery.of(context).size.width * 0.1
-                      // ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 5, 20, 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              'יצירת קשר',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Container(
+                        margin: EdgeInsets.fromLTRB(0, MediaQuery.of(context).size.height*0.003, 0, 0),
+                        padding: EdgeInsets.all(10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisSize: MainAxisSize.max,
+                          children: <Widget>[
+                            Expanded(
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.call,
+                                  color: Colors.lightGreenAccent,
+                                  size: 50,
+                                ),
+                                onPressed: () { _call(); },
+                              ),
+                            ),
+
+                            // SizedBox(width: 40,),
+
+                            Expanded(
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.location_on,
+                                  color: Colors.white,
+                                  size: 50,
+                                ),
+                                onPressed: () { _launchLocation(); },
+                              ),
+                            ),
+
+                            // SizedBox(width: 40,),
+
+                            Expanded(
+                              child: IconButton(
+                                icon: FaIcon(
+                                  FontAwesomeIcons.facebookSquare,
+                                  color: Colors.blue[600],
+                                  size: 50,
+                                ),
+                                onPressed: () { _launchFb(); },
+                              ),
+                            ),
+
+                            // SizedBox(width: 40,),
+
+                            Expanded(
+                              child: IconButton(
+                                icon: FaIcon(
+                                  FontAwesomeIcons.instagram,
+                                  size: 50,
+                                  color: Colors.amber,
+                                ),
+                                onPressed: () { _launchIg(); },
+                              ),
+                            ),
+
+                            // SizedBox(width: 40,),
+                          ],
+                        ),
+                      ),
 
                       //CopyRigths~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                       Row(

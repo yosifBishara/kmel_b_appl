@@ -15,6 +15,8 @@ class FireStoreClient {
       .collection(FireStoreArg.USERS_COLLECTION_ID);
   final _appUpdateCollection = _firestore
       .collection(FireStoreArg.APP_UPDATE_INFO_COLLECTION_ID);
+  final _enabledMondayFridayCollection = _firestore
+      .collection(FireStoreArg.ENABLE_MONDAY_FRIDAY_INFO_COLLECTION_ID);
 
   List _workTimeList = [];
   int _timeOffsetMin = 0;
@@ -169,6 +171,36 @@ class FireStoreClient {
     );
   }
 
+  Future<void> deleteUserDetails(String number, Appointment? nextUserApp) async {
+    if (nextUserApp != null) {
+      await deleteAppointment(nextUserApp);
+    }
+    DocumentSnapshot ds =  await _usersCollection.doc(number).get();
+    if (ds.exists) { await _usersCollection.doc(number).delete(); }
+  }
+
+  Future<bool> deleteNextAppointmentIfOld(Appointment? nextUserApp) async {
+    if (nextUserApp != null && nextUserApp.date != '') {
+      DateTime now = DateTime.now();
+      List<String> dateSplit = nextUserApp.date.split('.');
+      List<String> timeSplit = nextUserApp.time[0].split(':');
+      DateTime nextAppDateTime = DateTime(
+        int.parse(dateSplit[2]),
+        int.parse(dateSplit[1]),
+        int.parse(dateSplit[0]),
+        int.parse(timeSplit[0]),
+        int.parse(timeSplit[1]),
+      );
+
+      if (nextAppDateTime.isBefore(now)) {
+        await deleteAppointment(nextUserApp);
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
   Future<void> deleteAppointment (Appointment appointment) async {
 
     for (String t in appointment.time) {
@@ -176,21 +208,23 @@ class FireStoreClient {
           .doc(appointment.date)
           .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
           .doc(t).get();
-      String appNum = await ds.get(FireStoreArg.PHONE_NUM_FIELD);
-      if (appNum != appointment.number) {
-        return;
-      }
+      if (ds.exists) {
+        String appNum = await ds.get(FireStoreArg.PHONE_NUM_FIELD);
+        if (appNum != appointment.number) {
+          return;
+        }
 
-      await _appointmentsCollection
-          .doc(appointment.date)
-          .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
-          .doc(t)
-          .delete();
-      await _appointmentsCollection
-          .doc(appointment.date)
-          .update({
-            FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayRemove([t])
-      });
+        await _appointmentsCollection
+            .doc(appointment.date)
+            .collection(FireStoreArg.DAY_APPOINTMENTS_COLLECTION)
+            .doc(t)
+            .delete();
+        await _appointmentsCollection
+            .doc(appointment.date)
+            .update({
+              FireStoreArg.UNAVAILABLE_TIMES_FIELD: FieldValue.arrayRemove([t])
+            });
+      }
     }
     
     await _usersCollection
@@ -225,6 +259,40 @@ class FireStoreClient {
 
     return info;
   }
+
+  Future<List<String>> getRelevantEnabledMondayOrFriday(String docId, String fieldId) async {
+    DocumentSnapshot ds = await _enabledMondayFridayCollection
+        .doc(docId).get();
+
+    if (!ds.exists) {
+      return [];
+    }
+
+    DateTime now = DateTime.now();
+    List enabledDatesList = ds.get(fieldId);
+    List<String> res = [];
+
+    for (int i=0; i<enabledDatesList.length ; i++) {
+      List<String> dateSplit = enabledDatesList[i].split(UtilConst.DOT);
+      DateTime dateDateTime = DateTime(int.parse(dateSplit[2]), int.parse(dateSplit[1]), int.parse(dateSplit[0]));
+      if (dateDateTime.isBefore(now)) {
+        continue;
+      }
+      res.add(enabledDatesList[i]);
+    }
+
+    return res;
+  }
+
+  Future<List<String>> getRelevantEnabledMonday() async {
+    return await getRelevantEnabledMondayOrFriday(FireStoreArg.ENABLE_MONDAY_DATES_DOC, FireStoreArg.ENABLED_MONDAY_DATES_FIELD);
+  }
+
+  Future<List<String>> getRelevantEnabledFriday() async {
+    return await getRelevantEnabledMondayOrFriday(FireStoreArg.ENABLE_FRIDAY_DATES_DOC, FireStoreArg.ENABLED_FRIDAY_DATES_FIELD);
+  }
+
+
 
 }
 

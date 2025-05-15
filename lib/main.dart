@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:kmel_bishara_app/authPage.dart';
 import 'package:kmel_bishara_app/firestoreClient.dart';
+import 'package:kmel_bishara_app/globalConfig.dart';
 import 'HomePage.dart';
 import 'CostumerDetails.dart';
 import 'loading.dart';
@@ -16,12 +17,18 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform
   );
 
+  // Get Application Version Update Info
   final PackageInfo packageInfo = await PackageInfo.fromPlatform();
   Map<String, dynamic> appUpdates = await fsc.getAppUpdateInfo(packageInfo.version);
   bool isPlatUpdate = (Platform.isAndroid && appUpdates['android']) || (Platform.isIOS && appUpdates['ios']);
   bool isUpdateInfoEmpty = (appUpdates['title'] == null) || (appUpdates['title'] == '')
       || (appUpdates['content'] == null) || (appUpdates['content'] == '');
 
+  // Get enabled Mondays and fridays
+  globalConfig.enabledMondayDates = await fsc.getRelevantEnabledMonday();
+  globalConfig.enabledFridayDates = await fsc.getRelevantEnabledFriday();
+
+  // Start App
   if (isPlatUpdate && !isUpdateInfoEmpty) {
     // Update app screen
     runApp(MaterialApp(

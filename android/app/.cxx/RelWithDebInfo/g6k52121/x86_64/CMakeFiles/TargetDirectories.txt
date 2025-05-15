@@ -1,0 +1,2 @@
+/Users/yosif.bish/Documents/private-projects/kmel_b_appl/android/app/.cxx/RelWithDebInfo/g6k52121/x86_64/CMakeFiles/edit_cache.dir
+/Users/yosif.bish/Documents/private-projects/kmel_b_appl/android/app/.cxx/RelWithDebInfo/g6k52121/x86_64/CMakeFiles/rebuild_cache.dir

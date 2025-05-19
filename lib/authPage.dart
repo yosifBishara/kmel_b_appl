@@ -156,13 +156,14 @@ class _AuthPageState extends State<AuthPage> {
                           }
                           isKnownUserFlag = await isKnownUser(newVal);
                           if (isKnownUserFlag) {
-                            await fsc.deleteNextAppointmentIfOld(globalConfig.nextUserAppointment);
-                            globalConfig.nextUserAppointment = Appointment(
-                                globalConfig.nextUserAppointment!.name,
-                                globalConfig.nextUserAppointment!.number,
-                                '', '', 0, []
-                            );
-
+                            bool isNextAppointmentOld = await fsc.deleteNextAppointmentIfOld(globalConfig.nextUserAppointment);
+                            if (isNextAppointmentOld) {
+                              globalConfig.nextUserAppointment = Appointment(
+                                  globalConfig.nextUserAppointment!.name,
+                                  globalConfig.nextUserAppointment!.number,
+                                  '', '', 0, []
+                              );
+                            }
                           }
                           isNameFieldVisible = !isKnownUserFlag;
                           globalConfig.number = controlNum.text;

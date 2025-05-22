@@ -56,7 +56,9 @@ class _CostumerDetState extends State<CostumerDet> {
     List availableHours = List.from(
         Set.from(workingTimes).difference(Set.from(unavailableHours))
     );
-
+    availableHours = availableHours.where(
+            (hour) => hourAsDateTime(hour.toString()).isAfter(DateTime.now())
+    ).toList();
     return { for (var item in availableHours) item : true };
   }
 

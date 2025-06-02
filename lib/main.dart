@@ -9,13 +9,14 @@ import 'CostumerDetails.dart';
 import 'loading.dart';
 import 'firebase_options.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
+import 'package:timezone/data/latest.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
+  tz.initializeTimeZones();
 
   // Get Application Version Update Info
   final PackageInfo packageInfo = await PackageInfo.fromPlatform();

@@ -274,7 +274,7 @@ class FireStoreClient {
 
     for (int i=0; i<enabledDatesList.length ; i++) {
       List<String> dateSplit = enabledDatesList[i].split(UtilConst.DOT);
-      DateTime dateDateTime = DateTime(int.parse(dateSplit[2]), int.parse(dateSplit[1]), int.parse(dateSplit[0]));
+      DateTime dateDateTime = DateTime(int.parse(dateSplit[2]), int.parse(dateSplit[1]), int.parse(dateSplit[0]), 23, 59, 59);
       if (dateDateTime.isBefore(now)) {
         continue;
       }

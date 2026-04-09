@@ -25,6 +25,8 @@ class _CostumerDetState extends State<CostumerDet> {
   List<String> personCount = ['1', '2', '3'];
   List<String> availableHours = [];
 
+  bool _isAppointmentBtnDisabled = false;
+
   List<String> makeDatesDropDown() {
     DateTime tmp = DateTime.now();
     List<String> result = [];
@@ -375,6 +377,13 @@ class _CostumerDetState extends State<CostumerDet> {
                           backgroundColor: Colors.black
                       ),
                       onPressed: () async {
+
+                        if (_isAppointmentBtnDisabled) return;
+
+                        setState(() {
+                          _isAppointmentBtnDisabled = true;
+                        });
+
                         if (_formKey.currentState!.validate()) {
                           List<String> times = [timeDropDownValue!];
                           int persons = int.parse(personsDropDownValue!);
@@ -417,8 +426,11 @@ class _CostumerDetState extends State<CostumerDet> {
                               selectedHour = false;
                             });
                           }
-
                         }
+                        setState(() {
+                          _isAppointmentBtnDisabled = false;
+                        });
+
                       },
                       child: Padding(
                         padding: EdgeInsets.all(2.8,),

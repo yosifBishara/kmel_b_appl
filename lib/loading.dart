@@ -7,7 +7,8 @@ class LoadingScreen extends StatelessWidget {
     return WillPopScope(
       onWillPop: () async => false,
       child: Material(
-        child: Container(
+        child: SafeArea(
+          child: Container(
           color: Colors.grey[800],
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -38,6 +39,7 @@ class LoadingScreen extends StatelessWidget {
               )
             ],
           ),
+        ),
         ),
       ),
     );

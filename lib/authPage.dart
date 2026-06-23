@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kmel_bishara_app/firestoreClient.dart';
 import 'package:kmel_bishara_app/globalConfig.dart';
 import 'dart:async';
 import 'Appointment.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -80,10 +80,6 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     // makeTimeDropDown();
     // Firebase.initializeApp();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp,
-    ]);
 
     return SafeArea(
       child: GestureDetector(

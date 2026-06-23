@@ -26,7 +26,7 @@ class LocalNotification {
     initializationSettings = InitializationSettings(
         android: androidInitializationSettings, iOS: iosInitializationSettings);
     await flutterLocalNotificationsPlugin.initialize(
-        initializationSettings,
+        settings: initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) async {
           // Handle the notification tap here
           if (response.payload != null) {
@@ -50,7 +50,10 @@ class LocalNotification {
     NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
     await flutterLocalNotificationsPlugin.show(
-        0, 'Hello there', 'please subscribe my channel', notificationDetails);
+        id: 0,
+        title: 'Hello there',
+        body: 'please subscribe my channel',
+        notificationDetails: notificationDetails);
   }
 
   Future<void> notificationBefore2Hours() async {
@@ -69,9 +72,13 @@ class LocalNotification {
 
     NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails, iOS: iosNotificationDetails);
-    await flutterLocalNotificationsPlugin.zonedSchedule(1, 'שלום ${_myApp.name}',
-        "להזכירך!" + "\n" + "תורך היום " + "${_myApp.time[0]}" + "\n" + "נא להגיע 5 דקות לפני!",
-        tz.TZDateTime.from(timeDelayed, tz.local), notificationDetails, androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+        id: 1,
+        title: 'שלום ${_myApp.name}',
+        body: "להזכירך!" + "\n" + "תורך היום " + "${_myApp.time[0]}" + "\n" + "נא להגיע 5 דקות לפני!",
+        scheduledDate: tz.TZDateTime.from(timeDelayed, tz.local),
+        notificationDetails: notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle);
   }
 
   Future onSelectNotification(String? payLoad) {

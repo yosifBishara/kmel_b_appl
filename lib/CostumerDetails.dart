@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kmel_bishara_app/constants.dart';
 import 'package:kmel_bishara_app/firestoreClient.dart';
 import 'package:kmel_bishara_app/globalConfig.dart';
 import 'dart:async';
 import 'Appointment.dart';
 import 'Notifications.dart';
-import 'package:flutter/services.dart';
 
 class CostumerDet extends StatefulWidget {
   @override
@@ -186,24 +186,22 @@ class _CostumerDetState extends State<CostumerDet> {
   @override
   Widget build(BuildContext context) {
 
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp,
-    ]);
-
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.grey[800],
         appBar: AppBar(
           backgroundColor: Colors.black,
           centerTitle: true,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarIconBrightness: Brightness.light,
+            systemNavigationBarIconBrightness: Brightness.light,
+          ),
           title: Text('מילוי פרטים'),
 
         ),
-        body: Container(
+        body: SafeArea(
+          child: Container(
           width: MediaQuery.of(context).size.width * 0.98,
-          height: MediaQuery.of(context).size.height * 0.98,
           child: Form(
             key: _formKey,
             child: Padding(
@@ -485,7 +483,7 @@ class _CostumerDetState extends State<CostumerDet> {
             ),
           ),
         ),
-      ),
+        ),
     );
   }
 }

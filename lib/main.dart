@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kmel_bishara_app/authPage.dart';
 import 'package:kmel_bishara_app/firestoreClient.dart';
 import 'package:kmel_bishara_app/globalConfig.dart';
@@ -11,9 +12,26 @@ import 'firebase_options.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
+const SystemUiOverlayStyle _androidSystemUiOverlayStyle = SystemUiOverlayStyle(
+  statusBarIconBrightness: Brightness.light,
+  systemNavigationBarIconBrightness: Brightness.light,
+);
+
+ThemeData _appTheme() {
+  return ThemeData(
+    useMaterial3: true,
+    appBarTheme: const AppBarTheme(
+      systemOverlayStyle: _androidSystemUiOverlayStyle,
+    ),
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isAndroid) {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(_androidSystemUiOverlayStyle);
+  }
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform
   );
@@ -34,6 +52,7 @@ void main() async {
   if (isPlatUpdate && !isUpdateInfoEmpty) {
     // Update app screen
     runApp(MaterialApp(
+      theme: _appTheme(),
       home: UpdateScreen(title: appUpdates['title']!,content: appUpdates['content']! ),
       routes: {
         //routes between app pages
@@ -42,6 +61,7 @@ void main() async {
     ));
   } else {
     runApp(MaterialApp(
+      theme: _appTheme(),
       home: AuthPage(),
       routes: {
         //routes between app pages
@@ -68,42 +88,45 @@ class UpdateScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.black,
+        systemOverlayStyle: _androidSystemUiOverlayStyle,
         title: Text(
           title,
           textAlign: TextAlign.center,
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.2,
-              child: Card(
-                shadowColor: Colors.black,
-                elevation: 10,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(MediaQuery
-                      .of(context)
-                      .size
-                      .width * 0.015),
-                ),
-                child: Center(
-                  child: Text(
-                    content,
-                    style: TextStyle(
-                        fontSize: 25,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: MediaQuery.of(context).size.height * 0.2,
+                child: Card(
+                  shadowColor: Colors.black,
+                  elevation: 10,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(MediaQuery
+                        .of(context)
+                        .size
+                        .width * 0.015),
+                  ),
+                  child: Center(
+                    child: Text(
+                      content,
+                      style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-          ],
+              SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

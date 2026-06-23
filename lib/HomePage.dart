@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:kmel_bishara_app/SizeConfig.dart';
-import 'package:flutter/services.dart';
 import 'package:kmel_bishara_app/firestoreClient.dart';
 import 'package:kmel_bishara_app/globalConfig.dart';
 
@@ -153,20 +152,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
 
     sizeConfig.init(context);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp,
-    ]);
 
     return PopScope(
       canPop: false,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.grey[800],
-        body: Container(
-          padding: EdgeInsets.fromLTRB(0,sizeConfig.screenHeight*0.1,0, sizeConfig.screenHeight*0.1),
+        body: SafeArea(
+          child: Container(
+          padding: EdgeInsets.fromLTRB(0,sizeConfig.screenHeight*0.05,0, sizeConfig.screenHeight*0.05),
           width: sizeConfig.screenWidth,
-          height: sizeConfig.screenHeight,
           child:Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -328,6 +323,7 @@ class _HomePageState extends State<HomePage> {
 
                 ),
               ]),
+        ),
         ),
 
       ),
